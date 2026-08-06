@@ -1,0 +1,6 @@
+{
+  "name": "Yamaha Motorbike BD AI Assistant",
+  "description": "AI Chatbot & Service Assistant for Yamaha Bangladesh (ACI Motors). Features dynamic bike upselling, engine sound analyzer, ACI products knowledge base, showroom locator with BD auto-correction, and purchase lead email dispatch.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

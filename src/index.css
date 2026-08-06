@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/* Theme Variable Definitions */
+:root, [data-theme="racing-dark"] {
+  --bg-main: #050505;
+  --bg-card: #0a0a0a;
+  --bg-subcard: #111827;
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --border-color: #1f2937;
+  --accent-primary: #004791;
+  --accent-glow: #38bdf8;
+  --accent-text: #60a5fa;
+}
+
+[data-theme="corporate-light"] {
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-subcard: #f1f5f9;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --border-color: #cbd5e1;
+  --accent-primary: #0284c7;
+  --accent-glow: #0284c7;
+  --accent-text: #0369a1;
+}
+
+[data-theme="cyber-neon"] {
+  --bg-main: #070a12;
+  --bg-card: #0b1329;
+  --bg-subcard: #142242;
+  --text-main: #ecfeff;
+  --text-muted: #67e8f9;
+  --border-color: #155e75;
+  --accent-primary: #00f5d4;
+  --accent-glow: #22d3ee;
+  --accent-text: #22d3ee;
+}
+
+[data-theme="championship-gold"] {
+  --bg-main: #0c0a09;
+  --bg-card: #1c1917;
+  --bg-subcard: #292524;
+  --text-main: #fef08a;
+  --text-muted: #fde047;
+  --border-color: #78350f;
+  --accent-primary: #eab308;
+  --accent-glow: #facc15;
+  --accent-text: #facc15;
+}
+
+/* Global body styling driven by theme */
+body {
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Corporate Light Theme Overrides */
+[data-theme="corporate-light"] main,
+[data-theme="corporate-light"] section {
+  color: #0f172a;
+}
+
+[data-theme="corporate-light"] input:not([type="submit"]),
+[data-theme="corporate-light"] select,
+[data-theme="corporate-light"] textarea {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+
+[data-theme="corporate-light"] input::placeholder,
+[data-theme="corporate-light"] textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Cyber-Neon Theme Overrides */
+[data-theme="cyber-neon"] body {
+  background-color: #070a12 !important;
+  color: #ecfeff !important;
+}
+
+/* Championship Gold Theme Overrides */
+[data-theme="championship-gold"] body {
+  background-color: #0c0a09 !important;
+  color: #fef08a !important;
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
