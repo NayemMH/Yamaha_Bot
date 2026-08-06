@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, Volume2, VolumeX, RotateCcw, ArrowRight, ShieldCheck, CheckCircle2, ChevronRight, PhoneCall, ExternalLink, ShoppingCart, Mail, Phone, MapPin, UserCheck, X, Building, MessageCircle } from 'lucide-react';
 import { ChatMessage, Language, BikeModel, PurchaseLead } from '../types';
 import { YAMAHA_BIKES } from '../data/yamahaData';
@@ -248,22 +248,22 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col h-[calc(100vh-140px)] min-h-[580px]">
       {/* Top Bar inside Chatbot */}
-      <div className="bg-[#0a0a0a] border border-gray-800 rounded-2xl p-3 sm:p-4 mb-4 flex items-center justify-between shadow-xl gap-3">
+      <div className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded-2xl p-3 sm:p-4 mb-4 flex items-center justify-between shadow-xl gap-3">
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="w-10 h-10 rounded-full bg-[#004791]/20 border border-[#004791]/40 flex items-center justify-center text-blue-400">
               <Bot className="w-5 h-5" />
             </div>
-            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#0a0a0a]"></span>
+            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[var(--bg-main)]"></span>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-bold text-white text-sm sm:text-base">YamBot - Yamaha AI Support</h2>
+              <h2 className="font-bold text-[var(--text-main)] text-sm sm:text-base">YamBot - Yamaha AI Support</h2>
               <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-medium px-2 py-0.5 rounded-full border border-emerald-500/30">
                 Online
               </span>
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-[var(--text-muted)]">
               {language === 'bn' ? 'এসিআই মটরস অফিসিয়াল নলেজবেস যুক্ত' : 'Powered by Gemini AI & ACI Motors Knowledge'}
             </p>
           </div>
@@ -282,7 +282,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
             className={`p-2 rounded-xl text-xs font-medium border transition ${
               enableAudio || isSpeaking
                 ? 'bg-[#004791]/20 text-blue-400 border-[#004791]/50'
-                : 'bg-[#141414] text-gray-400 border-gray-800 hover:text-white'
+                : 'bg-[var(--bg-card)] text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-main)]'
             }`}
           >
             {isSpeaking ? (
@@ -295,7 +295,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
           <button
             onClick={handleClearChat}
             title="Reset Chat"
-            className="p-2 bg-[#141414] text-gray-400 hover:text-white border border-gray-800 rounded-xl transition"
+            className="p-2 bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-main)] border border-[var(--border-color)] rounded-xl transition"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -303,7 +303,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
       </div>
 
       {/* Message History Window */}
-      <div className="flex-1 bg-[#0a0a0a] rounded-2xl border border-gray-800 p-4 overflow-y-auto space-y-4 shadow-inner scrollbar-thin">
+      <div className="flex-1 bg-[var(--bg-main)] rounded-2xl border border-[var(--border-color)] p-4 overflow-y-auto space-y-4 shadow-inner scrollbar-thin">
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -321,7 +321,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                 className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
                   msg.sender === 'user'
                     ? 'bg-[#004791] text-white shadow-md shadow-[#004791]/30'
-                    : 'bg-[#181818] text-blue-400 border border-gray-800'
+                    : 'bg-[var(--bg-subcard)] text-blue-400 border border-[var(--border-color)]'
                 }`}
               >
                 {msg.sender === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
@@ -332,27 +332,27 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                 className={`p-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                   msg.sender === 'user'
                     ? 'bg-[#004791] text-white rounded-tr-none shadow-lg shadow-[#004791]/10'
-                    : 'bg-[#141414] border border-gray-800 text-gray-200 rounded-tl-none shadow-md'
+                    : 'bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-main)] rounded-tl-none shadow-md'
                 }`}
               >
                 {msg.text}
 
                 {/* Bike Card embedded if matched */}
                 {msg.bikeCard && (
-                  <div className="mt-3 bg-[#050505] border border-[#004791]/40 rounded-xl p-3 flex flex-col sm:flex-row gap-3 items-center">
+                  <div className="mt-3 bg-[var(--bg-main)] border border-[#004791]/40 rounded-xl p-3 flex flex-col sm:flex-row gap-3 items-center">
                     <img
                       src={msg.bikeCard.image}
                       alt={msg.bikeCard.name}
-                      className="w-full sm:w-28 h-20 object-cover rounded-lg border border-gray-800"
+                      className="w-full sm:w-28 h-20 object-cover rounded-lg border border-[var(--border-color)]"
                     />
                     <div className="flex-1 text-left">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-white text-sm">{msg.bikeCard.name}</span>
+                        <span className="font-bold text-[var(--text-main)] text-sm">{msg.bikeCard.name}</span>
                         <span className="text-xs bg-[#004791]/30 text-blue-300 px-2 py-0.5 rounded-md font-semibold border border-[#004791]/40">
                           {msg.bikeCard.engineCc}cc
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{msg.bikeCard.tagline}</p>
+                      <p className="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5">{msg.bikeCard.tagline}</p>
                       <div className="flex items-center gap-3 mt-2 text-xs">
                         <span className="font-extrabold text-emerald-400 text-sm">
                           ৳{(msg.bikeCard.offerPriceBDT || msg.bikeCard.priceBDT).toLocaleString()}
@@ -385,34 +385,34 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
 
                 {/* Purchase Lead Confirmation Slip */}
                 {msg.purchaseLeadRef && (
-                  <div className="mt-3 bg-[#080808] border-2 border-emerald-500/60 rounded-xl p-3.5 text-xs text-left space-y-2.5 shadow-lg">
-                    <div className="flex items-center justify-between border-b border-gray-800 pb-2">
+                  <div className="mt-3 bg-[var(--bg-main)] border-2 border-emerald-500/60 rounded-xl p-3.5 text-xs text-left space-y-2.5 shadow-lg">
+                    <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-2">
                       <div className="flex items-center gap-1.5 font-bold text-emerald-400">
                         <CheckCircle2 className="w-4 h-4" />
                         <span>Sales Representative Notified!</span>
                       </div>
-                      <span className="font-mono text-[10px] text-gray-500">{msg.purchaseLeadRef.leadRef}</span>
+                      <span className="font-mono text-[10px] text-[var(--text-muted)]">{msg.purchaseLeadRef.leadRef}</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-300 pt-1">
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-[var(--text-main)] pt-1">
                       <div>
-                        <span className="text-gray-500 block">Customer Name:</span>
-                        <strong className="text-white">{msg.purchaseLeadRef.customerName}</strong>
+                        <span className="text-[var(--text-muted)] block">Customer Name:</span>
+                        <strong className="text-[var(--text-main)]">{msg.purchaseLeadRef.customerName}</strong>
                       </div>
                       <div>
-                        <span className="text-gray-500 block">Contact Phone:</span>
+                        <span className="text-[var(--text-muted)] block">Contact Phone:</span>
                         <strong className="text-emerald-400">{msg.purchaseLeadRef.customerPhone}</strong>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-300 border-t border-gray-800 pt-2">
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-[var(--text-main)] border-t border-[var(--border-color)] pt-2">
                       <div>
-                        <span className="text-gray-500 block">Assigned Salesman:</span>
+                        <span className="text-[var(--text-muted)] block">Assigned Salesman:</span>
                         <strong className="text-blue-400">{msg.purchaseLeadRef.salesmanName}</strong>
                       </div>
                       <div>
-                        <span className="text-gray-500 block">Salesman Location:</span>
-                        <strong className="text-white">{msg.purchaseLeadRef.salesmanLocation}</strong>
+                        <span className="text-[var(--text-muted)] block">Salesman Location:</span>
+                        <strong className="text-[var(--text-main)]">{msg.purchaseLeadRef.salesmanLocation}</strong>
                       </div>
                     </div>
 
@@ -425,8 +425,8 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                         </span>
                         <span className="text-[10px] bg-emerald-900/60 text-emerald-200 px-1.5 py-0.5 rounded border border-emerald-500/30">Auto-Formatted</span>
                       </div>
-                      <p className="text-[10px] text-gray-300 leading-normal">
-                        Lead notice formatted for Senior Sales Representative <strong className="text-white">Md. Mahadi Hassan (+8801787687254)</strong>. Tap below to launch WhatsApp and deliver directly to his phone!
+                      <p className="text-[10px] text-[var(--text-main)] leading-normal">
+                        Lead notice formatted for Senior Sales Representative <strong className="text-[var(--text-main)]">Md. Mahadi Hassan (+8801787687254)</strong>. Tap below to launch WhatsApp and deliver directly to his phone!
                       </p>
                       <a
                         href={`https://wa.me/8801787687254?text=${encodeURIComponent(
@@ -448,10 +448,10 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                       </a>
                     </div>
 
-                    <div className="border-t border-gray-800 pt-2 flex flex-wrap items-center justify-between gap-2 text-[10px]">
-                      <span className="text-gray-400 flex items-center gap-1">
+                    <div className="border-t border-[var(--border-color)] pt-2 flex flex-wrap items-center justify-between gap-2 text-[10px]">
+                      <span className="text-[var(--text-muted)] flex items-center gap-1">
                         <Mail className="w-3 h-3 text-blue-400" />
-                        <span>Salesman Contact: <strong className="text-white">+8801787687254</strong></span>
+                        <span>Salesman Contact: <strong className="text-[var(--text-main)]">+8801787687254</strong></span>
                       </span>
                       <div className="flex items-center gap-2 flex-wrap">
                         <a
@@ -470,7 +470,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
 
                 <span
                   className={`block text-[10px] mt-1.5 ${
-                    msg.sender === 'user' ? 'text-blue-100/80 text-right' : 'text-gray-500'
+                    msg.sender === 'user' ? 'text-blue-100/80 text-right' : 'text-[var(--text-muted)]'
                   }`}
                 >
                   {msg.timestamp}
@@ -485,7 +485,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                   <button
                     key={idx}
                     onClick={() => handleSendMessage(reply)}
-                    className="text-xs bg-[#111111] hover:bg-[#004791]/20 hover:border-[#004791]/60 text-gray-300 hover:text-blue-200 border border-gray-800 px-3 py-1.5 rounded-full transition flex items-center gap-1.5 shadow-sm"
+                    className="text-xs bg-[var(--bg-subcard)] hover:bg-[#004791]/20 hover:border-[#004791]/60 text-[var(--text-main)] hover:text-blue-200 border border-[var(--border-color)] px-3 py-1.5 rounded-full transition flex items-center gap-1.5 shadow-sm"
                   >
                     <span>{reply}</span>
                   </button>
@@ -496,7 +496,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
         ))}
 
         {isLoading && (
-          <div className="flex items-center gap-3 text-gray-400 text-xs bg-[#141414] border border-gray-800 p-3 rounded-2xl w-fit">
+          <div className="flex items-center gap-3 text-[var(--text-muted)] text-xs bg-[var(--bg-card)] border border-[var(--border-color)] p-3 rounded-2xl w-fit">
             <Bot className="w-4 h-4 text-blue-400 animate-bounce" />
             <span className="animate-pulse">
               {language === 'bn' ? 'YamBot উত্তর তৈরি করছে...' : 'YamBot is thinking and looking up Yamaha BD database...'}
@@ -509,7 +509,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
 
       {/* Preset Action Buttons Grid */}
       <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
-        <span className="text-gray-500 text-[11px] font-medium shrink-0 flex items-center gap-1">
+        <span className="text-[var(--text-muted)] text-[11px] font-medium shrink-0 flex items-center gap-1">
           <Sparkles className="w-3 h-3 text-amber-400" />
           {language === 'bn' ? 'দ্রুত প্রশ্ন:' : 'Quick Questions:'}
         </span>
@@ -522,7 +522,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
           <button
             key={i}
             onClick={() => handleSendMessage(item.text)}
-            className="shrink-0 bg-[#0a0a0a] hover:bg-[#181818] text-gray-300 border border-gray-800 px-3 py-1.5 rounded-lg transition"
+            className="shrink-0 bg-[var(--bg-main)] hover:bg-[var(--bg-subcard)] text-[var(--text-main)] border border-[var(--border-color)] px-3 py-1.5 rounded-lg transition"
           >
             {language === 'bn' ? item.labelBn : item.labelEn}
           </button>
@@ -536,7 +536,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
             e.preventDefault();
             handleSendMessage();
           }}
-          className="flex items-center gap-2 bg-[#0a0a0a] border border-gray-800 focus-within:border-[#004791] p-2 rounded-2xl shadow-xl transition"
+          className="flex items-center gap-2 bg-[var(--bg-main)] border border-[var(--border-color)] focus-within:border-[#004791] p-2 rounded-2xl shadow-xl transition"
         >
           <input
             type="text"
@@ -547,7 +547,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                 ? 'ইয়ামাহা বাইকের দাম, সার্ভিস বা যে কোনো বিষয়ে লিখুন (বাংলা বা ইংরেজি)...'
                 : 'Ask YamBot about Yamaha prices, offers, specs, maintenance...'
             }
-            className="flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none"
+            className="flex-1 bg-transparent px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none"
           />
 
           <button
@@ -556,7 +556,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
             className={`px-4 py-2.5 rounded-xl font-semibold text-xs text-white flex items-center gap-1.5 transition ${
               inputPrompt.trim() && !isLoading
                 ? 'bg-[#004791] hover:bg-blue-700 shadow-lg shadow-[#004791]/30'
-                : 'bg-[#181818] text-gray-600 cursor-not-allowed border border-gray-800'
+                : 'bg-[var(--bg-subcard)] text-[var(--text-muted)] cursor-not-allowed border border-[var(--border-color)]'
             }`}
           >
             <span>{language === 'bn' ? 'পাঠান' : 'Send'}</span>
@@ -568,23 +568,23 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
       {/* Purchase Assistance Direct Modal */}
       {showPurchaseModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-[#0f172a] border border-[#004791]/60 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative text-left">
+          <div className="bg-[var(--bg-card)] border border-[#004791]/60 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative text-left">
             <button
               onClick={() => setShowPurchaseModal(false)}
-              className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-full transition"
+              className="absolute top-4 right-4 p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--bg-subcard)] hover:bg-[var(--border-color)] rounded-full transition"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <div className="flex items-center gap-3 border-b border-slate-800 pb-4 mb-4">
+            <div className="flex items-center gap-3 border-b border-[var(--border-color)] pb-4 mb-4">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
                 <ShoppingCart className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-white text-base">
+                <h3 className="font-bold text-[var(--text-main)] text-base">
                   {language === 'bn' ? 'ইয়ামাহা বাইক ক্রয় অনুসন্ধান' : 'Yamaha Bike Purchase Assistance'}
                 </h3>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-[var(--text-muted)]">
                   {language === 'bn' ? 'সরাসরি সেলস রিপ্রেজেন্টেটিভ এর সাথে সংযুক্ত হন' : 'Connect directly with ACI Motors Sales Team'}
                 </p>
               </div>
@@ -592,13 +592,13 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
 
             <form onSubmit={handleLeadSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                <label className="block text-xs font-semibold text-[var(--text-main)] mb-1">
                   {language === 'bn' ? 'পছন্দের বাইক মডেল:' : 'Preferred Bike Model:'}
                 </label>
                 <select
                   value={selectedBike}
                   onChange={(e) => setSelectedBike(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#004791]"
+                  className="w-full bg-[var(--bg-subcard)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-sm text-[var(--text-main)] focus:outline-none focus:border-[#004791]"
                 >
                   {YAMAHA_BIKES.map((b) => (
                     <option key={b.id} value={b.name}>
@@ -610,7 +610,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">
+                  <label className="block text-xs font-semibold text-[var(--text-main)] mb-1">
                     {language === 'bn' ? 'আপনার নাম:' : 'Your Name:'}
                   </label>
                   <input
@@ -619,12 +619,12 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                     value={custName}
                     onChange={(e) => setCustName(e.target.value)}
                     placeholder="e.g. Md. Tanvir Rahman"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#004791]"
+                    className="w-full bg-[var(--bg-subcard)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-[#004791]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">
+                  <label className="block text-xs font-semibold text-[var(--text-main)] mb-1">
                     {language === 'bn' ? 'মোবাইল/যোগাযোগ নম্বর:' : 'Contact Phone Number:'}
                   </label>
                   <input
@@ -633,7 +633,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                     value={custPhone}
                     onChange={(e) => setCustPhone(e.target.value)}
                     placeholder="e.g. +8801700000000"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#004791]"
+                    className="w-full bg-[var(--bg-subcard)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-[#004791]"
                   />
                 </div>
               </div>
@@ -646,7 +646,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
               />
 
               {/* Designated Salesman Info Box */}
-              <div className="bg-slate-900/90 border border-blue-500/30 rounded-xl p-3 text-xs space-y-1.5">
+              <div className="bg-[var(--bg-subcard)]/90 border border-blue-500/30 rounded-xl p-3 text-xs space-y-1.5">
                 <div className="flex items-center justify-between text-blue-400 font-bold">
                   <span className="flex items-center gap-1.5">
                     <UserCheck className="w-4 h-4 text-emerald-400" />
@@ -654,10 +654,10 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                   </span>
                   <span className="text-emerald-400 font-mono text-[10px]">ACI MOTORS BD</span>
                 </div>
-                <div className="text-gray-300 text-xs">
+                <div className="text-[var(--text-main)] text-xs">
                   <strong>Name:</strong> Md. Mahadi Hassan | <strong>Location:</strong> Dhaka
                 </div>
-                <div className="text-gray-400 text-[11px] flex items-center gap-1">
+                <div className="text-[var(--text-muted)] text-[11px] flex items-center gap-1">
                   <Mail className="w-3 h-3 text-amber-400" />
                   <span>Notification Email: <strong className="text-amber-300">Mahadi.Nayem@aci-bd.com</strong></span>
                 </div>
@@ -667,7 +667,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                 <button
                   type="button"
                   onClick={() => setShowPurchaseModal(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 font-medium text-xs rounded-xl transition"
+                  className="px-4 py-2 bg-[var(--bg-subcard)] hover:bg-[var(--border-color)] text-[var(--text-main)] font-medium text-xs rounded-xl transition"
                 >
                   {language === 'bn' ? 'বাতিল' : 'Cancel'}
                 </button>
@@ -675,7 +675,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                 <button
                   type="submit"
                   disabled={isSubmittingLead || !custName || !custPhone}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-900/40 transition"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-[var(--bg-subcard)] text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-900/40 transition"
                 >
                   {isSubmittingLead ? (
                     <span>Sending Lead...</span>
