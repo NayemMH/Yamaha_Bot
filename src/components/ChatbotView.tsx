@@ -619,7 +619,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                     value={custName}
                     onChange={(e) => setCustName(e.target.value)}
                     placeholder="e.g. Md. Tanvir Rahman"
-                    className="w-full bg-[var(--bg-subcard)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-[#004791]"
+                    className="w-full bg-[var(--bg-subcard)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#004791]"
                   />
                 </div>
 
@@ -633,7 +633,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                     value={custPhone}
                     onChange={(e) => setCustPhone(e.target.value)}
                     placeholder="e.g. +8801700000000"
-                    className="w-full bg-[var(--bg-subcard)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-sm text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-[#004791]"
+                    className="w-full bg-[var(--bg-subcard)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#004791]"
                   />
                 </div>
               </div>
