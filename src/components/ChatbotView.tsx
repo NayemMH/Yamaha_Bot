@@ -251,7 +251,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
       <div className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded-2xl p-3 sm:p-4 mb-4 flex items-center justify-between shadow-xl gap-3">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-[#004791]/20 border border-[#004791]/40 flex items-center justify-center text-blue-400">
+            <div className={`w-10 h-10 rounded-full bg-[#004791]/20 border border-[#004791]/40 flex items-center justify-center text-blue-400 transition ${isLoading ? 'animate-pulse' : ''}`}>
               <Bot className="w-5 h-5" />
             </div>
             <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[var(--bg-main)]"></span>
@@ -307,7 +307,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex flex-col ${
+            className={`flex flex-col animate-slide-up-fade ${
               msg.sender === 'user' ? 'items-end' : 'items-start'
             }`}
           >
@@ -496,11 +496,15 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
         ))}
 
         {isLoading && (
-          <div className="flex items-center gap-3 text-[var(--text-muted)] text-xs bg-[var(--bg-card)] border border-[var(--border-color)] p-3 rounded-2xl w-fit">
-            <Bot className="w-4 h-4 text-blue-400 animate-bounce" />
-            <span className="animate-pulse">
-              {language === 'bn' ? 'YamBot উত্তর তৈরি করছে...' : 'YamBot is thinking and looking up Yamaha BD database...'}
-            </span>
+          <div className="flex items-center gap-2.5 animate-slide-up-fade">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--bg-subcard)] text-blue-400 border border-[var(--border-color)]">
+              <Bot className="w-4 h-4" />
+            </div>
+            <div className="flex items-center gap-1.5 bg-[var(--bg-card)] border border-[var(--border-color)] px-4 py-3.5 rounded-2xl rounded-tl-none w-fit">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce" />
+            </div>
           </div>
         )}
 
