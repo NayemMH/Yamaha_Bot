@@ -1,5 +1,5 @@
 ﻿import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Volume2, VolumeX, RotateCcw, ArrowRight, ShieldCheck, CheckCircle2, ChevronRight, PhoneCall, ExternalLink, ShoppingCart, Mail, Phone, MapPin, UserCheck, X, Building, MessageCircle } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Volume2, VolumeX, RotateCcw, ArrowRight, ShieldCheck, CheckCircle2, ChevronRight, ShoppingCart, Mail, Phone, MapPin, UserCheck, X, MessageCircle } from 'lucide-react';
 import { ChatMessage, Language, BikeModel, PurchaseLead } from '../types';
 import { YAMAHA_BIKES } from '../data/yamahaData';
 import { LocationPicker } from './LocationPicker';
@@ -47,6 +47,16 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
   const [custUpazila, setCustUpazila] = useState('Tejgaon / Central');
   const [selectedBike, setSelectedBike] = useState('Yamaha YZF R15 V4');
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
+
+  const [expandedLeadIds, setExpandedLeadIds] = useState<Set<string>>(new Set());
+
+  const toggleLeadExpanded = (id: string) => {
+    setExpandedLeadIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -339,132 +349,107 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
 
                 {/* Bike Card embedded if matched */}
                 {msg.bikeCard && (
-                  <div className="mt-3 bg-[var(--bg-main)] border border-[#004791]/40 rounded-xl p-3 flex flex-col sm:flex-row gap-3 items-center">
+                  <div className="mt-3 bg-[var(--bg-main)] border border-[#004791]/40 rounded-xl p-2.5 flex items-center gap-2.5">
                     <img
                       src={msg.bikeCard.image}
                       alt={msg.bikeCard.name}
-                      className="w-full sm:w-28 h-20 object-cover rounded-lg border border-[var(--border-color)]"
+                      className="w-14 h-14 object-cover rounded-lg border border-[var(--border-color)] shrink-0"
                     />
-                    <div className="flex-1 text-left">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-[var(--text-main)] text-sm">{msg.bikeCard.name}</span>
-                        <span className="text-xs bg-[#004791]/30 text-blue-300 px-2 py-0.5 rounded-md font-semibold border border-[#004791]/40">
-                          {msg.bikeCard.engineCc}cc
-                        </span>
-                      </div>
-                      <p className="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5">{msg.bikeCard.tagline}</p>
-                      <div className="flex items-center gap-3 mt-2 text-xs">
-                        <span className="font-extrabold text-emerald-400 text-sm">
-                          ৳{(msg.bikeCard.offerPriceBDT || msg.bikeCard.priceBDT).toLocaleString()}
-                        </span>
-                        {msg.bikeCard.cashbackBDT && (
-                          <span className="bg-red-500/20 text-red-400 px-1.5 py-0.2 rounded text-[10px] font-bold">
-                            ৳{msg.bikeCard.cashbackBDT.toLocaleString()} Off
-                          </span>
-                        )}
-                      </div>
+                    <div className="flex-1 min-w-0 text-left">
+                      <span className="font-bold text-[var(--text-main)] text-xs block truncate">{msg.bikeCard.name}</span>
+                      <span className="font-extrabold text-emerald-400 text-xs">৳{(msg.bikeCard.offerPriceBDT || msg.bikeCard.priceBDT).toLocaleString()}</span>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-1.5 w-full sm:w-auto">
-                      <button
-                        onClick={() => handleOpenPurchaseModal(msg.bikeCard?.name)}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition shadow-md"
-                      >
-                        <ShoppingCart className="w-3.5 h-3.5" />
-                        <span>{language === 'bn' ? 'ক্রয় করতে চাই' : 'Buy Bike'}</span>
-                      </button>
-                      <button
-                        onClick={() => onNavigateTab('prices')}
-                        className="px-3 py-1.5 bg-[#004791] hover:bg-blue-700 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1 transition"
-                      >
-                        <span>{language === 'bn' ? 'বিস্তারিত' : 'View Specs'}</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleOpenPurchaseModal(msg.bikeCard?.name)}
+                      className="shrink-0 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg flex items-center gap-1 transition shadow-md"
+                    >
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                      <span>{language === 'bn' ? 'ক্রয়' : 'Buy'}</span>
+                    </button>
                   </div>
                 )}
 
                 {/* Purchase Lead Confirmation Slip */}
                 {msg.purchaseLeadRef && (
-                  <div className="mt-3 bg-[var(--bg-main)] border-2 border-emerald-500/60 rounded-xl p-3.5 text-xs text-left space-y-2.5 shadow-lg">
-                    <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-2">
+                  <div className="mt-3 bg-[var(--bg-main)] border-2 border-emerald-500/60 rounded-xl p-3 text-xs text-left space-y-2">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 font-bold text-emerald-400">
                         <CheckCircle2 className="w-4 h-4" />
-                        <span>Sales Representative Notified!</span>
+                        <span>Sales Rep Notified — {msg.purchaseLeadRef.salesmanName}</span>
                       </div>
-                      <span className="font-mono text-[10px] text-[var(--text-muted)]">{msg.purchaseLeadRef.leadRef}</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-[11px] text-[var(--text-main)] pt-1">
-                      <div>
-                        <span className="text-[var(--text-muted)] block">Customer Name:</span>
-                        <strong className="text-[var(--text-main)]">{msg.purchaseLeadRef.customerName}</strong>
-                      </div>
-                      <div>
-                        <span className="text-[var(--text-muted)] block">Contact Phone:</span>
-                        <strong className="text-emerald-400">{msg.purchaseLeadRef.customerPhone}</strong>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-[11px] text-[var(--text-main)] border-t border-[var(--border-color)] pt-2">
-                      <div>
-                        <span className="text-[var(--text-muted)] block">Assigned Salesman:</span>
-                        <strong className="text-blue-400">{msg.purchaseLeadRef.salesmanName}</strong>
-                      </div>
-                      <div>
-                        <span className="text-[var(--text-muted)] block">Salesman Location:</span>
-                        <strong className="text-[var(--text-main)]">{msg.purchaseLeadRef.salesmanLocation}</strong>
-                      </div>
-                    </div>
-
-                    {/* Auto-Dispatched WhatsApp Lead Notice Badge & Direct Action */}
-                    <div className="bg-emerald-950/50 border border-emerald-500/40 rounded-lg p-2.5 space-y-2">
-                      <div className="flex items-center justify-between text-[11px] font-bold text-emerald-400">
-                        <span className="flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                          <span>WhatsApp Lead Ready (+8801787687254)</span>
-                        </span>
-                        <span className="text-[10px] bg-emerald-900/60 text-emerald-200 px-1.5 py-0.5 rounded border border-emerald-500/30">Auto-Formatted</span>
-                      </div>
-                      <p className="text-[10px] text-[var(--text-main)] leading-normal">
-                        Lead notice formatted for Senior Sales Representative <strong className="text-[var(--text-main)]">Md. Mahadi Hassan (+8801787687254)</strong>. Tap below to launch WhatsApp and deliver directly to his phone!
-                      </p>
-                      <a
-                        href={`https://wa.me/8801787687254?text=${encodeURIComponent(
-                          `*🏍️ ACI MOTORS YAMAHA - URGENT CUSTOMER LEAD*\n` +
-                          `*Ref:* ${msg.purchaseLeadRef.leadRef}\n` +
-                          `*Customer:* ${msg.purchaseLeadRef.customerName}\n` +
-                          `*Phone:* ${msg.purchaseLeadRef.customerPhone}\n` +
-                          `*Location:* ${msg.purchaseLeadRef.location}\n` +
-                          `*Model Selected:* ${msg.purchaseLeadRef.preferredBike}\n` +
-                          `*Sales Rep Assigned:* ${msg.purchaseLeadRef.salesmanName} (+8801787687254)\n\n` +
-                          `Hello Mr. Mahadi Hassan, I requested details for ${msg.purchaseLeadRef.preferredBike}. Please contact me at ${msg.purchaseLeadRef.customerPhone}!`
-                        )}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg flex items-center justify-center gap-1.5 shadow-md shadow-emerald-900/50 transition"
+                      <button
+                        type="button"
+                        onClick={() => toggleLeadExpanded(msg.id)}
+                        className="text-[var(--text-muted)] hover:text-[var(--text-main)] transition"
                       >
+                        <ChevronRight className={`w-4 h-4 transition-transform ${expandedLeadIds.has(msg.id) ? 'rotate-90' : ''}`} />
+                      </button>
+                    </div>
+
+                    <a
+                      href={`https://wa.me/8801787687254?text=${encodeURIComponent(
+                        `*🏍️ ACI MOTORS YAMAHA - URGENT CUSTOMER LEAD*\n` +
+                        `*Ref:* ${msg.purchaseLeadRef.leadRef}\n` +
+                        `*Customer:* ${msg.purchaseLeadRef.customerName}\n` +
+                        `*Phone:* ${msg.purchaseLeadRef.customerPhone}\n` +
+                        `*Location:* ${msg.purchaseLeadRef.location}\n` +
+                        `*Model Selected:* ${msg.purchaseLeadRef.preferredBike}\n` +
+                        `*Sales Rep Assigned:* ${msg.purchaseLeadRef.salesmanName} (+8801787687254)\n\n` +
+                        `Hello Mr. Mahadi Hassan, I requested details for ${msg.purchaseLeadRef.preferredBike}. Please contact me at ${msg.purchaseLeadRef.customerPhone}!`
+                      )}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg flex items-center justify-center gap-1.5 shadow-md shadow-emerald-900/50 transition"
+                    >
                         <MessageCircle className="w-3.5 h-3.5" />
                         <span>📱 Send Directly to WhatsApp (+8801787687254)</span>
                       </a>
-                    </div>
 
-                    <div className="border-t border-[var(--border-color)] pt-2 flex flex-wrap items-center justify-between gap-2 text-[10px]">
-                      <span className="text-[var(--text-muted)] flex items-center gap-1">
-                        <Mail className="w-3 h-3 text-blue-400" />
-                        <span>Salesman Contact: <strong className="text-[var(--text-main)]">+8801787687254</strong></span>
-                      </span>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <a
-                          href={`mailto:${msg.purchaseLeadRef.salesmanEmail}?subject=URGENT%20Purchase%20Inquiry%20for%20${encodeURIComponent(msg.purchaseLeadRef.preferredBike)}&body=Hello%20${encodeURIComponent(msg.purchaseLeadRef.salesmanName)},%0A%0AI%20am%20interested%20in%20purchasing%20the%20${encodeURIComponent(msg.purchaseLeadRef.preferredBike)}.%0A%0AMy%20Details:%0AName:%20${encodeURIComponent(msg.purchaseLeadRef.customerName)}%0APhone:%20${encodeURIComponent(msg.purchaseLeadRef.customerPhone)}%0ALocation:%20${encodeURIComponent(msg.purchaseLeadRef.location)}%0ARef:%20${msg.purchaseLeadRef.leadRef}%0A%0APlease%20contact%20me%20as%20soon%20as%20possible.`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded font-bold flex items-center gap-1 transition shadow"
-                        >
-                          <Mail className="w-3 h-3" />
-                          <span>Email Direct</span>
-                        </a>
+                    {expandedLeadIds.has(msg.id) && (
+                      <div className="space-y-2.5 pt-1 border-t border-[var(--border-color)]">
+                        <div className="flex items-center justify-between pt-2">
+                          <span className="font-mono text-[10px] text-[var(--text-muted)]">{msg.purchaseLeadRef.leadRef}</span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[11px] text-[var(--text-main)]">
+                          <div>
+                            <span className="text-[var(--text-muted)] block">Customer Name:</span>
+                            <strong className="text-[var(--text-main)]">{msg.purchaseLeadRef.customerName}</strong>
+                          </div>
+                          <div>
+                            <span className="text-[var(--text-muted)] block">Contact Phone:</span>
+                            <strong className="text-emerald-400">{msg.purchaseLeadRef.customerPhone}</strong>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[11px] text-[var(--text-main)] border-t border-[var(--border-color)] pt-2">
+                          <div>
+                            <span className="text-[var(--text-muted)] block">Assigned Salesman:</span>
+                            <strong className="text-blue-400">{msg.purchaseLeadRef.salesmanName}</strong>
+                          </div>
+                          <div>
+                            <span className="text-[var(--text-muted)] block">Salesman Location:</span>
+                            <strong className="text-[var(--text-main)]">{msg.purchaseLeadRef.salesmanLocation}</strong>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-[var(--border-color)] pt-2 flex flex-wrap items-center justify-between gap-2 text-[10px]">
+                          <span className="text-[var(--text-muted)] flex items-center gap-1">
+                            <Mail className="w-3 h-3 text-blue-400" />
+                            <span>Salesman Contact: <strong className="text-[var(--text-main)]">+8801787687254</strong></span>
+                          </span>
+                          <a
+                            href={`mailto:${msg.purchaseLeadRef.salesmanEmail}?subject=URGENT%20Purchase%20Inquiry%20for%20${encodeURIComponent(msg.purchaseLeadRef.preferredBike)}&body=Hello%20${encodeURIComponent(msg.purchaseLeadRef.salesmanName)},%0A%0AI%20am%20interested%20in%20purchasing%20the%20${encodeURIComponent(msg.purchaseLeadRef.preferredBike)}.%0A%0AMy%20Details:%0AName:%20${encodeURIComponent(msg.purchaseLeadRef.customerName)}%0APhone:%20${encodeURIComponent(msg.purchaseLeadRef.customerPhone)}%0ALocation:%20${encodeURIComponent(msg.purchaseLeadRef.location)}%0ARef:%20${msg.purchaseLeadRef.leadRef}%0A%0APlease%20contact%20me%20as%20soon%20as%20possible.`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded font-bold flex items-center gap-1 transition shadow"
+                          >
+                            <Mail className="w-3 h-3" />
+                            <span>Email Direct</span>
+                          </a>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
 
