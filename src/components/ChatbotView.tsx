@@ -1,5 +1,5 @@
 ﻿import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Volume2, VolumeX, RotateCcw, ArrowRight, ShieldCheck, CheckCircle2, ChevronRight, ShoppingCart, Mail, Phone, MapPin, UserCheck, X, MessageCircle, Mic } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Volume2, VolumeX, RotateCcw, CheckCircle2, ChevronRight, ShoppingCart, Mail, UserCheck, X, MessageCircle, Mic } from 'lucide-react';
 import { ChatMessage, Language, BikeModel, PurchaseLead } from '../types';
 import { YAMAHA_BIKES } from '../data/yamahaData';
 import { LocationPicker } from './LocationPicker';
@@ -173,6 +173,13 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
 
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<MinimalSpeechRecognition | null>(null);
+  const transcriptRef = useRef('');
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+    };
+  }, []);
 
   const startListening = () => {
     const Ctor = getSpeechRecognitionCtor();
@@ -186,6 +193,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
     recognition.onresult = (event) => {
       const lastResultIndex = event.results.length - 1;
       const transcript = event.results[lastResultIndex][0].transcript;
+      transcriptRef.current = transcript;
       setInputPrompt(transcript);
     };
 
@@ -195,13 +203,12 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
 
     recognition.onend = () => {
       setIsListening(false);
-      setInputPrompt(current => {
-        if (current.trim()) {
-          handleSendMessage(current.trim());
-          return '';
-        }
-        return current;
-      });
+      const finalText = transcriptRef.current.trim();
+      transcriptRef.current = '';
+      if (finalText) {
+        setInputPrompt('');
+        handleSendMessage(finalText);
+      }
     };
 
     recognitionRef.current = recognition;
@@ -321,13 +328,13 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col h-[calc(100vh-140px)] min-h-[580px]">
       {/* Top Bar inside Chatbot */}
-      <div className="bg-[var(--bg-main)] border border-[var(--border-color)] rounded-2xl p-3 sm:p-4 mb-4 flex items-center justify-between shadow-xl gap-3">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-3 sm:p-4 mb-4 flex items-center justify-between shadow-xl gap-3">
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className={`w-10 h-10 rounded-full bg-[#004791]/20 border border-[#004791]/40 flex items-center justify-center text-blue-400 transition ${isLoading ? 'animate-pulse' : ''}`}>
               <Bot className="w-5 h-5" />
             </div>
-            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[var(--bg-main)]"></span>
+            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[var(--bg-card)]"></span>
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -376,7 +383,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
       </div>
 
       {/* Message History Window */}
-      <div className="flex-1 bg-[var(--bg-main)] rounded-2xl border border-[var(--border-color)] p-4 overflow-y-auto space-y-4 shadow-inner scrollbar-thin">
+      <div className="flex-1 bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] p-4 overflow-y-auto space-y-4 shadow-inner scrollbar-thin">
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -405,7 +412,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                 className={`p-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                   msg.sender === 'user'
                     ? 'bg-[#004791] text-white rounded-tr-none shadow-lg shadow-[#004791]/10'
-                    : 'bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-main)] rounded-tl-none shadow-md'
+                    : 'bg-[var(--bg-subcard)] border border-[var(--border-color)] text-[var(--text-main)] rounded-tl-none shadow-md'
                 }`}
               >
                 {msg.text}
@@ -443,6 +450,8 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                       <button
                         type="button"
                         onClick={() => toggleLeadExpanded(msg.id)}
+                        aria-label={expandedLeadIds.has(msg.id) ? 'Hide details' : 'Show details'}
+                        aria-expanded={expandedLeadIds.has(msg.id)}
                         className="text-[var(--text-muted)] hover:text-[var(--text-main)] transition"
                       >
                         <ChevronRight className={`w-4 h-4 transition-transform ${expandedLeadIds.has(msg.id) ? 'rotate-90' : ''}`} />
@@ -464,9 +473,9 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                       rel="noreferrer"
                       className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg flex items-center justify-center gap-1.5 shadow-md shadow-emerald-900/50 transition"
                     >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        <span>📱 Send Directly to WhatsApp (+8801787687254)</span>
-                      </a>
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>📱 Send Directly to WhatsApp (+8801787687254)</span>
+                    </a>
 
                     {expandedLeadIds.has(msg.id) && (
                       <div className="space-y-2.5 pt-1 border-t border-[var(--border-color)]">
@@ -548,7 +557,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
             <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-[var(--bg-subcard)] text-blue-400 border border-[var(--border-color)]">
               <Bot className="w-4 h-4" />
             </div>
-            <div className="flex items-center gap-1.5 bg-[var(--bg-card)] border border-[var(--border-color)] px-4 py-3.5 rounded-2xl rounded-tl-none w-fit">
+            <div className="flex items-center gap-1.5 bg-[var(--bg-subcard)] border border-[var(--border-color)] px-4 py-3.5 rounded-2xl rounded-tl-none w-fit">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce [animation-delay:-0.3s]" />
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce [animation-delay:-0.15s]" />
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] animate-bounce" />
@@ -588,7 +597,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
             e.preventDefault();
             handleSendMessage();
           }}
-          className="flex items-center gap-2 bg-[var(--bg-main)] border border-[var(--border-color)] focus-within:border-[#004791] p-2 rounded-2xl shadow-xl transition"
+          className="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border-color)] focus-within:border-[#004791] p-2 rounded-2xl shadow-xl transition"
         >
           <input
             type="text"
@@ -609,10 +618,12 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
               type="button"
               onClick={() => (isListening ? stopListening() : startListening())}
               title="Voice Input"
+              aria-label="Voice Input"
+              aria-pressed={isListening}
               className={`p-2.5 rounded-xl transition ${
                 isListening
                   ? 'bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse'
-                  : 'bg-[var(--bg-subcard)] text-[var(--text-muted)] border border-[var(--border-color)] hover:text-[var(--text-main)]'
+                  : 'bg-[#004791]/10 text-blue-400 border border-[#004791]/30 hover:text-blue-300 hover:bg-[#004791]/20'
               }`}
             >
               <Mic className="w-4 h-4" />
