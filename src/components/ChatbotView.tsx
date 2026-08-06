@@ -1,8 +1,28 @@
 ﻿import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Volume2, VolumeX, RotateCcw, ArrowRight, ShieldCheck, CheckCircle2, ChevronRight, ShoppingCart, Mail, Phone, MapPin, UserCheck, X, MessageCircle } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Volume2, VolumeX, RotateCcw, ArrowRight, ShieldCheck, CheckCircle2, ChevronRight, ShoppingCart, Mail, Phone, MapPin, UserCheck, X, MessageCircle, Mic } from 'lucide-react';
 import { ChatMessage, Language, BikeModel, PurchaseLead } from '../types';
 import { YAMAHA_BIKES } from '../data/yamahaData';
 import { LocationPicker } from './LocationPicker';
+
+type SpeechRecognitionResultLike = { transcript: string };
+interface MinimalSpeechRecognition extends EventTarget {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: { results: ArrayLike<ArrayLike<SpeechRecognitionResultLike>> }) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+}
+
+const getSpeechRecognitionCtor = (): (new () => MinimalSpeechRecognition) | null => {
+  const w = window as unknown as {
+    SpeechRecognition?: new () => MinimalSpeechRecognition;
+    webkitSpeechRecognition?: new () => MinimalSpeechRecognition;
+  };
+  return w.SpeechRecognition || w.webkitSpeechRecognition || null;
+};
 
 interface ChatbotViewProps {
   language: Language;
@@ -149,6 +169,49 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
     }
+  };
+
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<MinimalSpeechRecognition | null>(null);
+
+  const startListening = () => {
+    const Ctor = getSpeechRecognitionCtor();
+    if (!Ctor || isListening) return;
+
+    const recognition = new Ctor();
+    recognition.lang = language === 'bn' ? 'bn-BD' : 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = false;
+
+    recognition.onresult = (event) => {
+      const lastResultIndex = event.results.length - 1;
+      const transcript = event.results[lastResultIndex][0].transcript;
+      setInputPrompt(transcript);
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      setInputPrompt(current => {
+        if (current.trim()) {
+          handleSendMessage(current.trim());
+          return '';
+        }
+        return current;
+      });
+    };
+
+    recognitionRef.current = recognition;
+    setIsListening(true);
+    recognition.start();
+  };
+
+  const stopListening = () => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -532,12 +595,29 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
             value={inputPrompt}
             onChange={(e) => setInputPrompt(e.target.value)}
             placeholder={
-              language === 'bn'
+              isListening
+                ? (language === 'bn' ? 'শুনছি...' : 'Listening...')
+                : language === 'bn'
                 ? 'ইয়ামাহা বাইকের দাম, সার্ভিস বা যে কোনো বিষয়ে লিখুন (বাংলা বা ইংরেজি)...'
                 : 'Ask YamBot about Yamaha prices, offers, specs, maintenance...'
             }
             className="flex-1 bg-transparent px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none"
           />
+
+          {!!getSpeechRecognitionCtor() && (
+            <button
+              type="button"
+              onClick={() => (isListening ? stopListening() : startListening())}
+              title="Voice Input"
+              className={`p-2.5 rounded-xl transition ${
+                isListening
+                  ? 'bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse'
+                  : 'bg-[var(--bg-subcard)] text-[var(--text-muted)] border border-[var(--border-color)] hover:text-[var(--text-main)]'
+              }`}
+            >
+              <Mic className="w-4 h-4" />
+            </button>
+          )}
 
           <button
             type="submit"
