@@ -553,7 +553,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
 
       {/* Message History Window */}
       <div className="flex-1 bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] p-4 overflow-y-auto space-y-4 shadow-inner scrollbar-thin">
-        {messages.map((msg) => (
+        {messages.map((msg, idx) => (
           <div
             key={msg.id}
             className={`flex flex-col animate-slide-up-fade ${
@@ -801,7 +801,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                   <button
                     key={idx}
                     onClick={() => handleSendMessage(reply)}
-                    disabled={!!leadFlow}
+                    disabled={!!leadFlow && idx !== messages.length - 1}
                     className="text-xs bg-[var(--bg-subcard)] hover:bg-[#004791]/20 hover:border-[#004791]/60 text-[var(--text-main)] hover:text-blue-200 border border-[var(--border-color)] px-3 py-1.5 rounded-full transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span>{reply}</span>
