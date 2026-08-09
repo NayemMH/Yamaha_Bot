@@ -1,3 +1,5 @@
+import type { ACIProduct, DiagnosticIssue } from './data/aciProductsData';
+
 export type Language = 'en' | 'bn';
 
 export type ThemeMode = 'racing-dark' | 'corporate-light' | 'cyber-neon' | 'championship-gold';
@@ -107,6 +109,26 @@ export interface PurchaseLead {
   };
 }
 
+export interface ProductCard {
+  issue: Pick<DiagnosticIssue,
+    'id' | 'titleEn' | 'titleBn' | 'urgency' | 'rootCause' |
+    'recommendedActionEn' | 'recommendedActionBn' | 'requiresTechnician'>;
+  products: ACIProduct[];
+}
+
+export interface ConsultationLead {
+  refCode: string;
+  customerName: string;
+  customerPhone: string;
+  location: string;
+  technicianName: string;
+  technicianPhone: string;
+  serviceCenterName: string;
+  serviceCenterAddress: string;
+  consentedProducts: string[];
+  whatsappUrl?: string;
+}
+
 export interface ChatMessage {
   id: string;
   sender: 'user' | 'bot';
@@ -117,6 +139,8 @@ export interface ChatMessage {
   bikeCard?: BikeModel;
   appointmentRef?: ServiceAppointment;
   purchaseLeadRef?: PurchaseLead;
+  productCard?: ProductCard;
+  consultationRef?: ConsultationLead;
   showPurchaseForm?: boolean;
   platform?: 'web' | 'whatsapp' | 'messenger';
 }
