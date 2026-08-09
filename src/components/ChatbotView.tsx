@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, Volume2, VolumeX, RotateCcw, CheckCircle2, ChevronRight, ShoppingCart, Mail, UserCheck, X, MessageCircle, Mic } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Volume2, VolumeX, RotateCcw, CheckCircle2, ChevronRight, ShoppingCart, Mail, MessageCircle, Mic } from 'lucide-react';
 import { ChatMessage, Language, BikeModel, PurchaseLead, ProductCard } from '../types';
 import { YAMAHA_BIKES } from '../data/yamahaData';
 import { autoCorrectLocation, CorrectedLocation } from '../data/locationData';
@@ -475,6 +475,8 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
 
   const handleClearChat = () => {
     stopSpeech();
+    setLeadFlow(null);
+    setDeselectedProductIds({});
     setMessages([
       {
         id: 'msg-welcome-reset',
@@ -799,7 +801,8 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                   <button
                     key={idx}
                     onClick={() => handleSendMessage(reply)}
-                    className="text-xs bg-[var(--bg-subcard)] hover:bg-[#004791]/20 hover:border-[#004791]/60 text-[var(--text-main)] hover:text-blue-200 border border-[var(--border-color)] px-3 py-1.5 rounded-full transition flex items-center gap-1.5 shadow-sm"
+                    disabled={!!leadFlow}
+                    className="text-xs bg-[var(--bg-subcard)] hover:bg-[#004791]/20 hover:border-[#004791]/60 text-[var(--text-main)] hover:text-blue-200 border border-[var(--border-color)] px-3 py-1.5 rounded-full transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span>{reply}</span>
                   </button>
