@@ -826,6 +826,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
       </div>
 
       {/* Preset Action Buttons Grid */}
+      {!leadFlow && (
       <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
         <span className="text-[var(--text-muted)] text-[11px] font-medium shrink-0 flex items-center gap-1">
           <Sparkles className="w-3 h-3 text-amber-400" />
@@ -846,6 +847,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
           </button>
         ))}
       </div>
+      )}
 
       {/* Input Form */}
       <div className="mt-2 relative">
@@ -863,6 +865,14 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
             placeholder={
               isListening
                 ? (language === 'bn' ? 'শুনছি...' : 'Listening...')
+                : leadFlow?.step === 'name'
+                ? (language === 'bn' ? 'আপনার নাম লিখুন...' : 'Type your name...')
+                : leadFlow?.step === 'phone'
+                ? (language === 'bn' ? 'আপনার মোবাইল নম্বর লিখুন...' : 'Type your phone number...')
+                : leadFlow?.step === 'location'
+                ? (language === 'bn' ? 'আপনার জেলা/এলাকা লিখুন...' : 'Type your district/area...')
+                : leadFlow?.step === 'confirmLocation'
+                ? (language === 'bn' ? '"হ্যাঁ" অথবা "আবার লিখবো" লিখুন...' : 'Type "Yes" or "Retype"...')
                 : language === 'bn'
                 ? 'ইয়ামাহা বাইকের দাম, সার্ভিস বা যে কোনো বিষয়ে লিখুন (বাংলা বা ইংরেজি)...'
                 : 'Ask YamBot about Yamaha prices, offers, specs, maintenance...'
