@@ -478,7 +478,7 @@ app.post('/api/chat', async (req, res) => {
     }
     if (!replyText) replyText = generateLocalFallbackChatResponse(message, language || 'en');
 
-    const matchedIssues = matchDiagnostics(message, 1);
+    const matchedIssues = matchDiagnostics(message, 1, 4);
     const topIssue = matchedIssues[0] || null;
     const productCard = topIssue
       ? {

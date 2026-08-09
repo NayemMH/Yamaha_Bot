@@ -802,7 +802,7 @@ const DIAGNOSTIC_STOPWORDS = new Set([
 // Crude suffix stripping so "skids"/"skidding" both resolve to a comparable "skid" root.
 const stem = (w: string) => w.replace(/(ing|edly|ed|es|s)$/, '');
 
-export const matchDiagnostics = (text: string, limit = 3): DiagnosticIssue[] => {
+export const matchDiagnostics = (text: string, limit = 3, minScore = 1): DiagnosticIssue[] => {
   const q = text.toLowerCase();
   const queryWords = q.split(/\s+/)
     .filter(w => w.length >= 3)
@@ -825,7 +825,7 @@ export const matchDiagnostics = (text: string, limit = 3): DiagnosticIssue[] => 
     return { issue, score };
   });
 
-  return scored.filter(s => s.score > 0).sort((a, b) => b.score - a.score).slice(0, limit).map(s => s.issue);
+  return scored.filter(s => s.score >= minScore).sort((a, b) => b.score - a.score).slice(0, limit).map(s => s.issue);
 };
 
 export const getProductsByIds = (ids: string[]): ACIProduct[] =>
