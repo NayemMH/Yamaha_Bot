@@ -111,6 +111,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
 
   const submitLead = async (flow: LeadFlowState) => {
     if (!flow.correctedLocation || !flow.name || !flow.phone) return;
+    if (isSubmittingLead) return;
     setIsSubmittingLead(true);
     try {
       if (flow.kind === 'bike') {
