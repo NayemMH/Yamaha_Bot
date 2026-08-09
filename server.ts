@@ -478,7 +478,25 @@ app.post('/api/chat', async (req, res) => {
     }
     if (!replyText) replyText = generateLocalFallbackChatResponse(message, language || 'en');
 
-    return res.json({ text: replyText, timestamp: new Date().toISOString() });
+    const matchedIssues = matchDiagnostics(message, 1);
+    const topIssue = matchedIssues[0] || null;
+    const productCard = topIssue
+      ? {
+          issue: {
+            id: topIssue.id,
+            titleEn: topIssue.titleEn,
+            titleBn: topIssue.titleBn,
+            urgency: topIssue.urgency,
+            rootCause: topIssue.rootCause,
+            recommendedActionEn: topIssue.recommendedActionEn,
+            recommendedActionBn: topIssue.recommendedActionBn,
+            requiresTechnician: topIssue.requiresTechnician
+          },
+          products: getProductsByIds(topIssue.recommendedProducts)
+        }
+      : null;
+
+    return res.json({ text: replyText, timestamp: new Date().toISOString(), productCard });
   } catch (error: any) {
     console.error('Error in /api/chat:', error);
     return res.json({ text: generateLocalFallbackChatResponse(req.body?.message || '', req.body?.language || 'en'), timestamp: new Date().toISOString() });
