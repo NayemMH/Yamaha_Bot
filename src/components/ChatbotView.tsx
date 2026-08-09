@@ -74,6 +74,21 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
   const [leadFlow, setLeadFlow] = useState<LeadFlowState | null>(null);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
 
+  const [deselectedProductIds, setDeselectedProductIds] = useState<Record<string, Set<string>>>({});
+
+  const isProductChecked = (msgId: string, productId: string) =>
+    !(deselectedProductIds[msgId]?.has(productId));
+
+  const toggleProductChecked = (msgId: string, productId: string) => {
+    setDeselectedProductIds(prev => {
+      const next = { ...prev };
+      const set = new Set(next[msgId] || []);
+      if (set.has(productId)) set.delete(productId); else set.add(productId);
+      next[msgId] = set;
+      return next;
+    });
+  };
+
   const [expandedLeadIds, setExpandedLeadIds] = useState<Set<string>>(new Set());
 
   const toggleLeadExpanded = (id: string) => {
@@ -105,6 +120,19 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
     setLeadFlow({ kind: 'bike', step: 'name', bikeName });
     appendBotText(
       language === 'bn' ? `দারুণ পছন্দ! আপনার নামটি বলুন:` : `Great choice! What's your name?`,
+      ['Cancel']
+    );
+  };
+
+  const handleStartServiceLead = (msg: ChatMessage) => {
+    if (leadFlow || !msg.productCard) return;
+    const deselected = deselectedProductIds[msg.id] || new Set<string>();
+    const selectedProductIds = msg.productCard.products
+      .map(p => p.id)
+      .filter(id => !deselected.has(id));
+    setLeadFlow({ kind: 'service', step: 'name', productCard: msg.productCard, selectedProductIds });
+    appendBotText(
+      language === 'bn' ? 'নিশ্চয়ই সাহায্য করবো! আপনার নামটি বলুন:' : "Sure, I'll help with that! What's your name?",
       ['Cancel']
     );
   };
@@ -150,6 +178,50 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
         } else {
           appendBotText(language === 'bn'
             ? 'দুঃখিত, লিড পাঠাতে সমস্যা হয়েছে। অনুগ্রহ করে হটলাইন ১৬৫০৮ এ কল করুন।'
+            : 'Sorry, something went wrong sending your request. Please call our hotline at 16508.');
+        }
+      } else {
+        const response = await fetch('/api/service-consultation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName: flow.name,
+            customerPhone: flow.phone,
+            district: flow.correctedLocation.district,
+            upazila: flow.correctedLocation.upazila,
+            problemKey: flow.productCard?.issue.id,
+            consentedProductIds: flow.selectedProductIds || [],
+            language
+          })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          const consentedNames = (flow.productCard?.products || [])
+            .filter(p => (flow.selectedProductIds || []).includes(p.id))
+            .map(p => p.name);
+
+          setMessages(prev => [...prev, {
+            id: `consult-confirm-${Date.now()}`,
+            sender: 'bot',
+            text: data.message || (language === 'bn' ? 'আপনার অনুরোধ পাঠানো হয়েছে।' : 'Your request has been sent.'),
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            consultationRef: {
+              refCode: data.refCode,
+              customerName: flow.name,
+              customerPhone: flow.phone,
+              location: `${flow.correctedLocation.upazila}, ${flow.correctedLocation.district}`,
+              technicianName: data.technician.name,
+              technicianPhone: data.technician.phone,
+              serviceCenterName: data.technician.serviceCenterName,
+              serviceCenterAddress: data.technician.serviceCenterAddress,
+              consentedProducts: consentedNames,
+              whatsappUrl: data.dispatches?.whatsapp?.whatsappUrl
+            }
+          }]);
+        } else {
+          appendBotText(language === 'bn'
+            ? 'দুঃখিত, অনুরোধ পাঠাতে সমস্যা হয়েছে। অনুগ্রহ করে হটলাইন ১৬৫০৮ এ কল করুন।'
             : 'Sorry, something went wrong sending your request. Please call our hotline at 16508.');
         }
       }
@@ -368,6 +440,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
         text: botText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         bikeCard: matchedBike,
+        productCard: data.productCard || undefined,
         suggestedQuickReplies: language === 'bn' ? [
           '🛒 বাইকটি ক্রয় করতে চাই (সরাসরি যোগাযোগ)',
           '📅 সার্ভিস বুকিং করুন',
@@ -534,6 +607,55 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                   </div>
                 )}
 
+                {/* Product/Service Diagnosis Card */}
+                {msg.productCard && (
+                  <div className="mt-3 bg-[var(--bg-main)] border border-amber-500/40 rounded-xl p-3 text-left space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-[var(--text-main)] text-xs">
+                        {language === 'bn' ? msg.productCard.issue.titleBn : msg.productCard.issue.titleEn}
+                      </span>
+                      <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                        msg.productCard.issue.urgency === 'Critical' ? 'bg-red-500/20 text-red-400 border-red-500/40' :
+                        msg.productCard.issue.urgency === 'High' ? 'bg-orange-500/20 text-orange-400 border-orange-500/40' :
+                        msg.productCard.issue.urgency === 'Medium' ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' :
+                        'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                      }`}>
+                        {msg.productCard.issue.urgency}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-[var(--text-muted)]">{msg.productCard.issue.rootCause}</p>
+                    <p className="text-[11px] text-[var(--text-main)]">
+                      {language === 'bn' ? msg.productCard.issue.recommendedActionBn : msg.productCard.issue.recommendedActionEn}
+                    </p>
+
+                    {msg.productCard.products.length > 0 && (
+                      <div className="space-y-1.5 pt-1 border-t border-[var(--border-color)]">
+                        {msg.productCard.products.map(p => (
+                          <label key={p.id} className="flex items-center gap-2 text-[11px] text-[var(--text-main)] cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isProductChecked(msg.id, p.id)}
+                              onChange={() => toggleProductChecked(msg.id, p.id)}
+                              className="accent-emerald-500"
+                            />
+                            <span className="flex-1">{p.name}</span>
+                            <span className="font-semibold text-emerald-400">৳{p.priceBDT.toLocaleString()}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => handleStartServiceLead(msg)}
+                      disabled={!!leadFlow}
+                      className="w-full mt-1 px-3 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-lg transition"
+                    >
+                      {language === 'bn' ? '✅ এসিআই মটরস থেকে সাহায্য নিন' : '✅ Get Help From ACI Motors'}
+                    </button>
+                  </div>
+                )}
+
                 {/* Purchase Lead Confirmation Slip */}
                 {msg.purchaseLeadRef && (
                   <div className="mt-3 bg-[var(--bg-main)] border-2 border-emerald-500/60 rounded-xl p-3 text-xs text-left space-y-2">
@@ -615,6 +737,46 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                             <span>Email Direct</span>
                           </a>
                         </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Service/Product Consultation Confirmation Slip */}
+                {msg.consultationRef && (
+                  <div className="mt-3 bg-[var(--bg-main)] border-2 border-emerald-500/60 rounded-xl p-3 text-xs text-left space-y-2">
+                    <div className="flex items-center gap-1.5 font-bold text-emerald-400">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Technician Notified — {msg.consultationRef.technicianName}</span>
+                    </div>
+
+                    {msg.consultationRef.whatsappUrl && (
+                      <a
+                        href={msg.consultationRef.whatsappUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg flex items-center justify-center gap-1.5 shadow-md shadow-emerald-900/50 transition"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>📱 Send Directly to WhatsApp</span>
+                      </a>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-[var(--text-main)] pt-1">
+                      <div>
+                        <span className="text-[var(--text-muted)] block">Ref:</span>
+                        <strong className="font-mono">{msg.consultationRef.refCode}</strong>
+                      </div>
+                      <div>
+                        <span className="text-[var(--text-muted)] block">Service Center:</span>
+                        <strong>{msg.consultationRef.serviceCenterName}</strong>
+                      </div>
+                    </div>
+
+                    {msg.consultationRef.consentedProducts.length > 0 && (
+                      <div className="text-[11px] text-[var(--text-main)] border-t border-[var(--border-color)] pt-2">
+                        <span className="text-[var(--text-muted)] block">Products Requested:</span>
+                        <strong>{msg.consultationRef.consentedProducts.join(', ')}</strong>
                       </div>
                     )}
                   </div>
