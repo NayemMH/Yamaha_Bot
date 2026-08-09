@@ -1,8 +1,8 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, Volume2, VolumeX, RotateCcw, CheckCircle2, ChevronRight, ShoppingCart, Mail, UserCheck, X, MessageCircle, Mic } from 'lucide-react';
-import { ChatMessage, Language, BikeModel, PurchaseLead } from '../types';
+import { ChatMessage, Language, BikeModel, PurchaseLead, ProductCard } from '../types';
 import { YAMAHA_BIKES } from '../data/yamahaData';
-import { LocationPicker } from './LocationPicker';
+import { autoCorrectLocation, CorrectedLocation } from '../data/locationData';
 
 type SpeechRecognitionResultLike = { transcript: string };
 interface MinimalSpeechRecognition extends EventTarget {
@@ -35,14 +35,14 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
       id: 'msg-welcome',
       sender: 'bot',
       text: language === 'bn'
-        ? 'স্বাগতম! আমি "YamBot" - ইয়ামাহা বাংলাদেশ (এসিআই মটরস) এর অফিসিয়াল এআই স্মার্ট অ্যাসিস্ট্যান্ট।\n\nআমি আপনাকে ইয়ামাহা বাইকের বর্তমান অফিসিয়াল প্রাইস, স্পেসিফিকেশন, ক্যাশব্যাক অফার, শোরুম ও ইনভেন্টরি চেক এবং সার্ভিস বুকিংয়ে সাহায্য করতে পারি। আপনি কীভাবে সাহায্য চান?'
+        ? 'স্বাগতম! আমি "YamBot" - ইয়ামাহা বাংলাদেশ (এসিআই মটরস) এর অফিসিয়াল এআই স্মার্ট অ্যাসিস্ট্যান্ট।\n\nআমি আপনাকে ইয়ামাহা বাইকের বর্তমান অফিসিয়াল প্রাইস, স্পেসিফিকেশন, ক্যাশব্যাক অফার, শোরুম ও ইনভেন্টরি চেক এবং সার্ভিস বুকিংয়ে সাহায্য করতে পারি। আপনি কীভাবে সাহায্য চান?'
         : 'Welcome to Yamaha Motorbike Bangladesh! I am "YamBot", your official AI Customer Specialist.\n\nI can assist you with official BDT price lists, current cashback offers, bike comparisons, showroom stock checks, and maintenance appointment bookings. How can I assist you today?',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       suggestedQuickReplies: language === 'bn' ? [
-        '🛒 R15 V4 বাইকটি ক্রয় করতে চাই',
+        '🛒 R15 V4 বাইকটি ক্রয় করতে চাই',
         '🏍️ R15 V4 এবং MT-15 এর বর্তমান দাম কত?',
         '🔥 নতুন ক্যাশব্যাক অফারগুলো দেখান',
-        '📍 ঢাকায় কাছে সার্ভিস সেন্টার ও শোরুম',
+        '📍 ঢাকায় কাছে সার্ভিস সেন্টার ও শোরুম',
         '📅 অনলাইন ফ্রি সার্ভিস বুকিং করবো কীভাবে?'
       ] : [
         '🛒 I Want to Purchase R15 V4',
@@ -59,13 +59,19 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [enableAudio, setEnableAudio] = useState(false);
 
-  // Purchase Lead Modal State
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [custName, setCustName] = useState('');
-  const [custPhone, setCustPhone] = useState('');
-  const [custDistrict, setCustDistrict] = useState('Dhaka');
-  const [custUpazila, setCustUpazila] = useState('Tejgaon / Central');
-  const [selectedBike, setSelectedBike] = useState('Yamaha YZF R15 V4');
+  interface LeadFlowState {
+    kind: 'bike' | 'service';
+    step: 'name' | 'phone' | 'location' | 'confirmLocation';
+    bikeName?: string;
+    productCard?: ProductCard;
+    selectedProductIds?: string[];
+    name?: string;
+    phone?: string;
+    locationRaw?: string;
+    correctedLocation?: CorrectedLocation;
+  }
+
+  const [leadFlow, setLeadFlow] = useState<LeadFlowState | null>(null);
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
 
   const [expandedLeadIds, setExpandedLeadIds] = useState<Set<string>>(new Set());
@@ -84,67 +90,155 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  const handleOpenPurchaseModal = (bikeName?: string) => {
-    if (bikeName) setSelectedBike(bikeName);
-    setShowPurchaseModal(true);
+  const appendBotText = (text: string, quickReplies?: string[]) => {
+    setMessages(prev => [...prev, {
+      id: `bot-flow-${Date.now()}-${Math.floor(Math.random() * 999)}`,
+      sender: 'bot',
+      text,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      suggestedQuickReplies: quickReplies
+    }]);
   };
 
-  const handleLeadSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!custName || !custPhone || isSubmittingLead) return;
+  const handleStartBikeLead = (bikeName: string) => {
+    if (leadFlow) return;
+    setLeadFlow({ kind: 'bike', step: 'name', bikeName });
+    appendBotText(
+      language === 'bn' ? `দারুণ পছন্দ! আপনার নামটি বলুন:` : `Great choice! What's your name?`,
+      ['Cancel']
+    );
+  };
 
+  const submitLead = async (flow: LeadFlowState) => {
+    if (!flow.correctedLocation || !flow.name || !flow.phone) return;
     setIsSubmittingLead(true);
     try {
-      const response = await fetch('/api/purchase-lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName: custName,
-          customerPhone: custPhone,
-          district: custDistrict,
-          upazila: custUpazila,
-          preferredBike: selectedBike
-        })
-      });
+      if (flow.kind === 'bike') {
+        const response = await fetch('/api/purchase-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName: flow.name,
+            customerPhone: flow.phone,
+            district: flow.correctedLocation.district,
+            upazila: flow.correctedLocation.upazila,
+            preferredBike: flow.bikeName
+          })
+        });
+        const data = await response.json();
 
-      const data = await response.json();
-
-      if (data.success && data.lead) {
-        // Auto-launch WhatsApp Web/App pre-filled lead message
-        if (data.whatsappNotice?.whatsappUrl) {
-          try {
-            window.open(data.whatsappNotice.whatsappUrl, '_blank');
-          } catch (e) {
-            console.log('Popup blocked for automatic WhatsApp opening');
+        if (data.success && data.lead) {
+          if (data.whatsappNotice?.whatsappUrl) {
+            try {
+              window.open(data.whatsappNotice.whatsappUrl, '_blank');
+            } catch (e) {
+              console.log('Popup blocked for automatic WhatsApp opening');
+            }
           }
+
+          setMessages(prev => [...prev, {
+            id: `lead-confirm-${Date.now()}`,
+            sender: 'bot',
+            text: language === 'bn'
+              ? `ধন্যবাদ ${flow.name}! আপনার ${flow.bikeName} বাইকটির ক্রয় সংক্রান্ত তথ্য আমাদের সিনিয়র সেলস স্পেশালিস্ট **${data.salesman.name}** (${data.salesman.location}) এর কাছে ইমেইল এবং হোয়াটসঅ্যাপে পাঠানো হয়েছে।`
+              : `Thank you ${flow.name}! Your purchase inquiry for ${flow.bikeName} has been dispatched via Email & WhatsApp to Senior Sales Representative **${data.salesman.name}** (${data.salesman.location}).`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            purchaseLeadRef: { ...data.lead, whatsappNotice: data.whatsappNotice },
+            suggestedQuickReplies: ['📍 Find Nearest Showroom in Dhaka', '💰 EMI Calculator & Loan Eligibility']
+          }]);
+        } else {
+          appendBotText(language === 'bn'
+            ? 'দুঃখিত, লিড পাঠাতে সমস্যা হয়েছে। অনুগ্রহ করে হটলাইন ১৬৫০৮ এ কল করুন।'
+            : 'Sorry, something went wrong sending your request. Please call our hotline at 16508.');
         }
-
-        const confirmMsg: ChatMessage = {
-          id: `lead-confirm-${Date.now()}`,
-          sender: 'bot',
-          text: language === 'bn'
-            ? `ধন্যবাদ ${custName}! আপনার ${selectedBike} বাইকটির ক্রয় সংক্রান্ত তথ্য আমাদের সিনিয়র সেলস স্পেশালিস্ট **Md. Mahadi Hassan** (${data.salesman.location}, ইমেইল: Mahadi.Nayem@aci-bd.com, হোয়াটসঅ্যাপ: +8801787687254) এর কাছে ইমেইল এবং হোয়াটসঅ্যাপে পাঠানো হয়েছে।\n\n📱 **হোয়াটসঅ্যাপ ডিসপ্যাচ:** নিচে দেওয়া সবুজ হোয়াটসঅ্যাপ বোতামে ক্লিক করে সরাসরি মো: মাহাদী হাসান (+8801787687254) এর হোয়াটসঅ্যাপে প্রি-ফরম্যাটেড লিডটি পাঠান।`
-            : `Thank you ${custName}! Your purchase inquiry for ${selectedBike} has been dispatched via Email & WhatsApp Lead Notice directly to Senior Sales Representative **Md. Mahadi Hassan** (${data.salesman.location}, Email: Mahadi.Nayem@aci-bd.com, WhatsApp: +8801787687254).\n\n📱 **WhatsApp Direct Dispatch:** Click the green WhatsApp button on the card below to send the pre-filled lead directly to Mr. Mahadi Hassan (+8801787687254)!`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          purchaseLeadRef: {
-            ...data.lead,
-            whatsappNotice: data.whatsappNotice
-          },
-          suggestedQuickReplies: [
-            '📍 Find Nearest Showroom in Dhaka',
-            '💰 EMI Calculator & Loan Eligibility'
-          ]
-        };
-
-        setMessages(prev => [...prev, confirmMsg]);
-        setShowPurchaseModal(false);
-        setCustName('');
-        setCustPhone('');
       }
     } catch (err) {
       console.error('Lead submission error:', err);
+      appendBotText(language === 'bn'
+        ? 'দুঃখিত, নেটওয়ার্ক সমস্যা হয়েছে। অনুগ্রহ করে হটলাইন ১৬৫০৮ এ কল করুন।'
+        : 'Sorry, a network error occurred. Please call our hotline at 16508.');
     } finally {
       setIsSubmittingLead(false);
+      setLeadFlow(null);
+    }
+  };
+
+  const handleLeadFlowInput = async (rawText: string) => {
+    if (!leadFlow) return;
+    const trimmed = rawText.trim();
+    const lower = trimmed.toLowerCase();
+
+    if (lower === 'cancel' || lower.includes('বাতিল')) {
+      setLeadFlow(null);
+      appendBotText(language === 'bn'
+        ? 'ঠিক আছে, অনুরোধটি বাতিল করা হলো। আর কিছু জানতে চাইলে বলুন।'
+        : "No problem, I've cancelled that request. Let me know if there's anything else!");
+      return;
+    }
+
+    if (leadFlow.step === 'name') {
+      setLeadFlow({ ...leadFlow, name: trimmed, step: 'phone' });
+      appendBotText(
+        language === 'bn' ? 'ধন্যবাদ! আপনার মোবাইল নম্বরটি লিখুন:' : "Thanks! What's your phone number?",
+        ['Cancel']
+      );
+      return;
+    }
+
+    if (leadFlow.step === 'phone') {
+      const digits = trimmed.replace(/[^0-9]/g, '');
+      if (digits.length < 10) {
+        appendBotText(
+          language === 'bn'
+            ? 'নম্বরটি সঠিক মনে হচ্ছে না, অনুগ্রহ করে সঠিক মোবাইল নম্বর লিখুন (যেমনঃ 01700000000):'
+            : "That doesn't look like a valid phone number. Please enter a valid number (e.g. 01700000000):",
+          ['Cancel']
+        );
+        return;
+      }
+      setLeadFlow({ ...leadFlow, phone: trimmed, step: 'location' });
+      appendBotText(
+        language === 'bn' ? 'আপনার এলাকা/জেলা কোনটি?' : 'Which district/area are you in?',
+        ['Cancel']
+      );
+      return;
+    }
+
+    if (leadFlow.step === 'location') {
+      const corrected = autoCorrectLocation(trimmed);
+      setLeadFlow({ ...leadFlow, locationRaw: trimmed, correctedLocation: corrected, step: 'confirmLocation' });
+      const confirmText = language === 'bn'
+        ? `বুঝেছি — ${corrected.upazila}, ${corrected.district}। এটা কি ঠিক আছে?`
+        : `Got it — ${corrected.upazila}, ${corrected.district}. Is that correct?`;
+      appendBotText(
+        confirmText,
+        language === 'bn' ? ['✅ হ্যাঁ, ঠিক আছে', '✏️ আবার লিখবো', 'Cancel'] : ['✅ Yes, that\'s correct', '✏️ Let me retype', 'Cancel']
+      );
+      return;
+    }
+
+    if (leadFlow.step === 'confirmLocation') {
+      const isYes = lower.includes('yes') || lower.includes('হ্যাঁ') || lower.includes('correct') || lower.includes('ঠিক');
+      const isRetype = lower.includes('retype') || lower.includes('আবার');
+
+      if (isRetype) {
+        setLeadFlow({ ...leadFlow, step: 'location', locationRaw: undefined, correctedLocation: undefined });
+        appendBotText(
+          language === 'bn' ? 'ঠিক আছে, আবার আপনার এলাকা/জেলা লিখুন:' : 'Sure, please type your district/area again:',
+          ['Cancel']
+        );
+        return;
+      }
+
+      if (isYes) {
+        await submitLead(leadFlow);
+        return;
+      }
+
+      appendBotText(
+        language === 'bn' ? '"হ্যাঁ" অথবা "আবার লিখবো" নির্বাচন করুন:' : 'Please choose "Yes, that\'s correct" or "Let me retype":',
+        language === 'bn' ? ['✅ হ্যাঁ, ঠিক আছে', '✏️ আবার লিখবো', 'Cancel'] : ['✅ Yes, that\'s correct', '✏️ Let me retype', 'Cancel']
+      );
     }
   };
 
@@ -156,7 +250,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = language === 'bn' ? 'bn-BD' : 'en-US';
     utterance.rate = 1.0;
-    
+
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
 
@@ -225,14 +319,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
     const query = (textToSend || inputPrompt).trim();
     if (!query || isLoading) return;
 
-    // Trigger purchase modal directly if user says "buy" or "purchase" or clicks buy trigger
     const lowerQuery = query.toLowerCase();
-    if (lowerQuery.includes('buy') || lowerQuery.includes('purchase') || lowerQuery.includes('ক্রয়') || lowerQuery.includes('কিনবো')) {
-      // Find bike mentioned
-      const bikeFound = YAMAHA_BIKES.find(b => lowerQuery.includes(b.name.toLowerCase()) || lowerQuery.includes(b.id.toLowerCase()));
-      if (bikeFound) setSelectedBike(bikeFound.name);
-      setShowPurchaseModal(true);
-    }
 
     const userMsg: ChatMessage = {
       id: `usr-${Date.now()}`,
@@ -243,12 +330,18 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
 
     setMessages(prev => [...prev, userMsg]);
     if (!textToSend) setInputPrompt('');
+
+    if (leadFlow) {
+      await handleLeadFlowInput(query);
+      return;
+    }
+
     setIsLoading(true);
 
     // Check if query mentions a specific bike to attach a custom bike card
-    const matchedBike = YAMAHA_BIKES.find(b => 
-      lowerQuery.includes(b.name.toLowerCase()) || 
-      lowerQuery.includes(b.id.toLowerCase()) || 
+    const matchedBike = YAMAHA_BIKES.find(b =>
+      lowerQuery.includes(b.name.toLowerCase()) ||
+      lowerQuery.includes(b.id.toLowerCase()) ||
       (b.id === 'r15-v4' && (lowerQuery.includes('r15') || lowerQuery.includes('v4'))) ||
       (b.id === 'mt-15-v2' && lowerQuery.includes('mt')) ||
       (b.id === 'fzs-v4-fi' && lowerQuery.includes('fz'))
@@ -275,7 +368,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         bikeCard: matchedBike,
         suggestedQuickReplies: language === 'bn' ? [
-          '🛒 বাইকটি ক্রয় করতে চাই (সরাসরি যোগাযোগ)',
+          '🛒 বাইকটি ক্রয় করতে চাই (সরাসরি যোগাযোগ)',
           '📅 সার্ভিস বুকিং করুন',
           '💰 ইএমআই (EMI) লোন ক্যালকুলেটর'
         ] : [
@@ -296,7 +389,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
         id: `err-${Date.now()}`,
         sender: 'bot',
         text: language === 'bn'
-          ? 'দুঃখিত, সংযোগে সমস্যা হয়েছে। আপনি অনুগ্রহ করে ইয়ামাহা এসিআই মটরস হটলাইন ১৬৫০৮ নম্বরে ফোন করুন অথবা নিচে থেকে বিকল্প অপশন বেছে নিন।'
+          ? 'দুঃখিত, সংযোগে সমস্যা হয়েছে। আপনি অনুগ্রহ করে ইয়ামাহা এসিআই মটরস হটলাইন ১৬৫০৮ নম্বরে ফোন করুন অথবা নিচে থেকে বিকল্প অপশন বেছে নিন।'
           : 'Sorry, a network connection error occurred. Please feel free to call our hotline at 16508 for immediate assistance.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
@@ -313,7 +406,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
         id: 'msg-welcome-reset',
         sender: 'bot',
         text: language === 'bn'
-          ? 'চ্যাট হিস্ট্রি রিসেট হয়েছে! ইয়ামাহা বাইক সম্পর্কে অন্য কিছু জানার থাকলে লিখুন।'
+          ? 'চ্যাট হিস্ট্রি রিসেট হয়েছে! ইয়ামাহা বাইক সম্পর্কে অন্য কিছু জানার থাকলে লিখুন।'
           : 'Chat history reset! Feel free to ask anything about Yamaha motorbikes in Bangladesh.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         suggestedQuickReplies: [
@@ -344,7 +437,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
               </span>
             </div>
             <p className="text-xs text-[var(--text-muted)]">
-              {language === 'bn' ? 'এসিআই মটরস অফিসিয়াল নলেজবেস যুক্ত' : 'Powered by Gemini AI & ACI Motors Knowledge'}
+              {language === 'bn' ? 'এসিআই মটরস অফিসিয়াল নলেজবেস যুক্ত' : 'Powered by Gemini AI & ACI Motors Knowledge'}
             </p>
           </div>
         </div>
@@ -430,11 +523,12 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                       <span className="font-extrabold text-emerald-400 text-xs">৳{(msg.bikeCard.offerPriceBDT || msg.bikeCard.priceBDT).toLocaleString()}</span>
                     </div>
                     <button
-                      onClick={() => handleOpenPurchaseModal(msg.bikeCard?.name)}
-                      className="shrink-0 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg flex items-center gap-1 transition shadow-md"
+                      onClick={() => msg.bikeCard && handleStartBikeLead(msg.bikeCard.name)}
+                      disabled={!!leadFlow}
+                      className="shrink-0 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg flex items-center gap-1 transition shadow-md"
                     >
                       <ShoppingCart className="w-3.5 h-3.5" />
-                      <span>{language === 'bn' ? 'ক্রয়' : 'Buy'}</span>
+                      <span>{language === 'bn' ? 'আগ্রহী' : "I'm Interested"}</span>
                     </button>
                   </div>
                 )}
@@ -607,7 +701,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
               isListening
                 ? (language === 'bn' ? 'শুনছি...' : 'Listening...')
                 : language === 'bn'
-                ? 'ইয়ামাহা বাইকের দাম, সার্ভিস বা যে কোনো বিষয়ে লিখুন (বাংলা বা ইংরেজি)...'
+                ? 'ইয়ামাহা বাইকের দাম, সার্ভিস বা যে কোনো বিষয়ে লিখুন (বাংলা বা ইংরেজি)...'
                 : 'Ask YamBot about Yamaha prices, offers, specs, maintenance...'
             }
             className="flex-1 bg-transparent px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none"
@@ -644,133 +738,6 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
           </button>
         </form>
       </div>
-
-      {/* Purchase Assistance Direct Modal */}
-      {showPurchaseModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-[var(--bg-card)] border border-[#004791]/60 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative text-left">
-            <button
-              onClick={() => setShowPurchaseModal(false)}
-              className="absolute top-4 right-4 p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] bg-[var(--bg-subcard)] hover:bg-[var(--border-color)] rounded-full transition"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center gap-3 border-b border-[var(--border-color)] pb-4 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                <ShoppingCart className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[var(--text-main)] text-base">
-                  {language === 'bn' ? 'ইয়ামাহা বাইক ক্রয় অনুসন্ধান' : 'Yamaha Bike Purchase Assistance'}
-                </h3>
-                <p className="text-xs text-[var(--text-muted)]">
-                  {language === 'bn' ? 'সরাসরি সেলস রিপ্রেজেন্টেটিভ এর সাথে সংযুক্ত হন' : 'Connect directly with ACI Motors Sales Team'}
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={handleLeadSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-[var(--text-main)] mb-1">
-                  {language === 'bn' ? 'পছন্দের বাইক মডেল:' : 'Preferred Bike Model:'}
-                </label>
-                <select
-                  value={selectedBike}
-                  onChange={(e) => setSelectedBike(e.target.value)}
-                  className="w-full bg-[var(--bg-subcard)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-sm text-[var(--text-main)] focus:outline-none focus:border-[#004791]"
-                >
-                  {YAMAHA_BIKES.map((b) => (
-                    <option key={b.id} value={b.name}>
-                      {b.name} — ৳{(b.offerPriceBDT || b.priceBDT).toLocaleString()}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-main)] mb-1">
-                    {language === 'bn' ? 'আপনার নাম:' : 'Your Name:'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={custName}
-                    onChange={(e) => setCustName(e.target.value)}
-                    placeholder="e.g. Md. Tanvir Rahman"
-                    className="w-full bg-[var(--bg-subcard)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#004791]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-[var(--text-main)] mb-1">
-                    {language === 'bn' ? 'মোবাইল/যোগাযোগ নম্বর:' : 'Contact Phone Number:'}
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={custPhone}
-                    onChange={(e) => setCustPhone(e.target.value)}
-                    placeholder="e.g. +8801700000000"
-                    className="w-full bg-[var(--bg-subcard)] border border-[var(--border-color)] rounded-xl px-3 py-2 text-sm text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[#004791]"
-                  />
-                </div>
-              </div>
-
-              <LocationPicker
-                language={language}
-                district={custDistrict}
-                upazila={custUpazila}
-                onChange={(d, u) => { setCustDistrict(d); setCustUpazila(u); }}
-              />
-
-              {/* Designated Salesman Info Box */}
-              <div className="bg-[var(--bg-subcard)]/90 border border-blue-500/30 rounded-xl p-3 text-xs space-y-1.5">
-                <div className="flex items-center justify-between text-blue-400 font-bold">
-                  <span className="flex items-center gap-1.5">
-                    <UserCheck className="w-4 h-4 text-emerald-400" />
-                    Assigned Senior Sales Representative:
-                  </span>
-                  <span className="text-emerald-400 font-mono text-[10px]">ACI MOTORS BD</span>
-                </div>
-                <div className="text-[var(--text-main)] text-xs">
-                  <strong>Name:</strong> Md. Mahadi Hassan | <strong>Location:</strong> Dhaka
-                </div>
-                <div className="text-[var(--text-muted)] text-[11px] flex items-center gap-1">
-                  <Mail className="w-3 h-3 text-amber-400" />
-                  <span>Notification Email: <strong className="text-amber-300">Mahadi.Nayem@aci-bd.com</strong></span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowPurchaseModal(false)}
-                  className="px-4 py-2 bg-[var(--bg-subcard)] hover:bg-[var(--border-color)] text-[var(--text-main)] font-medium text-xs rounded-xl transition"
-                >
-                  {language === 'bn' ? 'বাতিল' : 'Cancel'}
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={isSubmittingLead || !custName || !custPhone}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-[var(--bg-subcard)] text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-900/40 transition"
-                >
-                  {isSubmittingLead ? (
-                    <span>Sending Lead...</span>
-                  ) : (
-                    <>
-                      <span>{language === 'bn' ? 'অনুরোধ পাঠান' : 'Submit Purchase Request'}</span>
-                      <Send className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
