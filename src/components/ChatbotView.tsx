@@ -441,15 +441,17 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         bikeCard: matchedBike,
         productCard: data.productCard || undefined,
-        suggestedQuickReplies: language === 'bn' ? [
-          '🛒 বাইকটি ক্রয় করতে চাই (সরাসরি যোগাযোগ)',
-          '📅 সার্ভিস বুকিং করুন',
-          '💰 ইএমআই (EMI) লোন ক্যালকুলেটর'
-        ] : [
-          '🛒 I Want to Purchase This Bike',
-          '📅 Book Service Now',
-          '💰 EMI Monthly Loan Calculator'
-        ]
+        suggestedQuickReplies: data.productCard
+          ? undefined
+          : language === 'bn' ? [
+              '🛒 বাইকটি ক্রয় করতে চাই (সরাসরি যোগাযোগ)',
+              '📅 সার্ভিস বুকিং করুন',
+              '💰 ইএমআই (EMI) লোন ক্যালকুলেটর'
+            ] : [
+              '🛒 I Want to Purchase This Bike',
+              '📅 Book Service Now',
+              '💰 EMI Monthly Loan Calculator'
+            ]
       };
 
       setMessages(prev => [...prev, botMsg]);
@@ -642,7 +644,6 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                               className="accent-emerald-500"
                             />
                             <span className="flex-1">{p.name}</span>
-                            <span className="font-semibold text-emerald-400">৳{p.priceBDT.toLocaleString()}</span>
                           </label>
                         ))}
                       </div>
@@ -678,14 +679,14 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                     </div>
 
                     <a
-                      href={`https://wa.me/8801787687254?text=${encodeURIComponent(
+                      href={`https://wa.me/8801637026774?text=${encodeURIComponent(
                         `*🏍️ ACI MOTORS YAMAHA - URGENT CUSTOMER LEAD*\n` +
                         `*Ref:* ${msg.purchaseLeadRef.leadRef}\n` +
                         `*Customer:* ${msg.purchaseLeadRef.customerName}\n` +
                         `*Phone:* ${msg.purchaseLeadRef.customerPhone}\n` +
                         `*Location:* ${msg.purchaseLeadRef.location}\n` +
                         `*Model Selected:* ${msg.purchaseLeadRef.preferredBike}\n` +
-                        `*Sales Rep Assigned:* ${msg.purchaseLeadRef.salesmanName} (+8801787687254)\n\n` +
+                        `*Sales Rep Assigned:* ${msg.purchaseLeadRef.salesmanName} (+8801637026774)\n\n` +
                         `Hello Mr. Mahadi Hassan, I requested details for ${msg.purchaseLeadRef.preferredBike}. Please contact me at ${msg.purchaseLeadRef.customerPhone}!`
                       )}`}
                       target="_blank"
@@ -693,7 +694,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                       className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg flex items-center justify-center gap-1.5 shadow-md shadow-emerald-900/50 transition"
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
-                      <span>📱 Send Directly to WhatsApp (+8801787687254)</span>
+                      <span>📱 Send Directly to WhatsApp (+8801637026774)</span>
                     </a>
 
                     {expandedLeadIds.has(msg.id) && (
@@ -727,7 +728,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({ language, onNavigateTa
                         <div className="border-t border-[var(--border-color)] pt-2 flex flex-wrap items-center justify-between gap-2 text-[10px]">
                           <span className="text-[var(--text-muted)] flex items-center gap-1">
                             <Mail className="w-3 h-3 text-blue-400" />
-                            <span>Salesman Contact: <strong className="text-[var(--text-main)]">+8801787687254</strong></span>
+                            <span>Salesman Contact: <strong className="text-[var(--text-main)]">+8801637026774</strong></span>
                           </span>
                           <a
                             href={`mailto:${msg.purchaseLeadRef.salesmanEmail}?subject=URGENT%20Purchase%20Inquiry%20for%20${encodeURIComponent(msg.purchaseLeadRef.preferredBike)}&body=Hello%20${encodeURIComponent(msg.purchaseLeadRef.salesmanName)},%0A%0AI%20am%20interested%20in%20purchasing%20the%20${encodeURIComponent(msg.purchaseLeadRef.preferredBike)}.%0A%0AMy%20Details:%0AName:%20${encodeURIComponent(msg.purchaseLeadRef.customerName)}%0APhone:%20${encodeURIComponent(msg.purchaseLeadRef.customerPhone)}%0ALocation:%20${encodeURIComponent(msg.purchaseLeadRef.location)}%0ARef:%20${msg.purchaseLeadRef.leadRef}%0A%0APlease%20contact%20me%20as%20soon%20as%20possible.`}

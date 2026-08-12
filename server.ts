@@ -130,7 +130,7 @@ interface WhatsAppSendResult {
 }
 
 async function sendWhatsAppMessage(targetPhoneRaw: string, text: string): Promise<WhatsAppSendResult> {
-  const targetPhone = (targetPhoneRaw || process.env.WHATSAPP_TARGET_PHONE || '8801787687254').replace(/[^0-9]/g, '');
+  const targetPhone = (targetPhoneRaw || process.env.WHATSAPP_TARGET_PHONE || '8801637026774').replace(/[^0-9]/g, '');
   const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(text)}`;
 
   if (waClient && whatsappState.status === 'ready') {
@@ -239,7 +239,7 @@ const buildProductLines = () => {
   const byBrand: Record<string, ACIProduct[]> = {};
   for (const p of ACI_PRODUCTS_CATALOG) (byBrand[p.brand] ||= []).push(p);
   return Object.entries(byBrand)
-    .map(([brand, items]) => `   ${brand}:\n` + items.map(p => `     - ${p.name} (${formatBDT(p.priceBDT)}): ${p.tagline}. Best for: ${p.recommendedFor.join('; ')}.`).join('\n'))
+    .map(([brand, items]) => `   ${brand}:\n` + items.map(p => `     - ${p.name}: ${p.tagline}. Best for: ${p.recommendedFor.join('; ')}.`).join('\n'))
     .join('\n');
 };
 
@@ -272,9 +272,10 @@ When a user gives a budget for a NEW bike purchase (not a service problem):
   4. Frame it as a helpful comparison, not a hard push: "for only ৳X more per month you get...". Always be truthful about prices.
 
 === 5. CROSS-SELL GUIDANCE (SECONDARY — only after the problem is fully explained) ===
-Once you've diagnosed a service problem and explained the root cause and fix (Section 3), you MAY briefly mention the relevant product(s) as an optional aid (e.g. slippery ride → CEAT tires; low mileage → Carbon Cleaner + Octane Booster + Yamalube oil; 3,000+ km since oil change → Yamalube oil). Keep this short — it is a suggestion, not the main answer.
+Once you've diagnosed a service problem and explained the root cause and fix (Section 3), you MAY briefly mention the relevant product(s) by name as an optional aid (e.g. slippery ride → CEAT tires; low mileage → Carbon Cleaner + Octane Booster + Yamalube oil; 3,000+ km since oil change → Yamalube oil). Keep this short — it is a suggestion, not the main answer.
+NEVER state or imply a price (in Taka, BDT, or any currency) for these ACI products in a diagnosis reply — pricing for these products is deliberately not disclosed in chat; the assigned representative shares it directly when they contact the customer. (This restriction is specific to the diagnosis/cross-sell products in Section 2 — official Yamaha bike prices in Section 1 and the budget upsell protocol in Section 4 are unaffected and should still be quoted accurately.)
 If the customer mentions a rural/village area, load shedding, farming, or off-grid needs, you may also mention the ACI rural energy line: EcoFlow power stations, GoodWe hybrid inverters, Aiko 620W solar panels.
-End with a single, plain, low-pressure consent question — e.g. "Would you like to purchase this bike / book a service for this?" — and nothing more. Do NOT name, email, or phone-number any specific representative in your reply; the app's purchase/booking button already handles collecting the customer's name, phone and location and will introduce them to their assigned representative only after they submit it. Never invent or state a rep's name yourself.
+End with a single, plain, low-pressure consent question that covers BOTH options together — e.g. "Would you like to book a service visit and/or get these products delivered?" — never ask about service booking alone when you've also just recommended a product; always give the customer the chance to say yes to either or both. Do NOT name, email, or phone-number any specific representative in your reply; the app's purchase/booking button already handles collecting the customer's name, phone and location and will introduce them to their assigned representative only after they submit it. Never invent or state a rep's name yourself.
 
 === 6. WARRANTY & SERVICING ===
    - 2-Year or 30,000 KM engine warranty; 4 free services (1st: 500-1k km, 2nd: 3k-4k km, 3rd: 6k-7k km, 4th: 9k-10k km).
@@ -371,7 +372,7 @@ function generateLocalFallbackChatResponse(query: string, language: 'bn' | 'en')
   let responseBody = '';
   let showPurchaseCTA = false;
 
-  const diagnosed = matchDiagnostics(query, 1)[0];
+  const diagnosed = matchDiagnostics(query, 1, 4)[0];
 
   if (matchedBikes.length === 1) {
     responseBody = (language === 'bn' ? 'এখানে ' : "Here's ") + renderBikeDetail(matchedBikes[0], language);
@@ -394,7 +395,7 @@ function generateLocalFallbackChatResponse(query: string, language: 'bn' | 'en')
     // Customer service first: lead with root cause + fix. Products are mentioned only
     // as a brief, secondary aid after the actual problem has been explained.
     const prods = getProductsByIds(diagnosed.recommendedProducts);
-    const prodLines = prods.map(p => `• **${p.name}** (${formatBDT(p.priceBDT)}): ${p.tagline}`).join('\n');
+    const prodLines = prods.map(p => `• **${p.name}**: ${p.tagline}`).join('\n');
     const opener = URGENCY_OPENER[diagnosed.urgency]?.[language] || '';
     responseBody = language === 'bn'
       ? `🛠️ **${diagnosed.titleBn}**\n\n${opener}\n\n**সম্ভাব্য কারণ:** ${diagnosed.rootCause}\n\n**সমাধান:** ${diagnosed.recommendedActionBn}\n\n${diagnosed.requiresTechnician ? '⚠️ এই সমস্যার জন্য নিকটস্থ টেকনিশিয়ান পরিদর্শন প্রয়োজন। Service Assistant ট্যাব থেকে কনসালটেশন বুক করুন!\n\n' : ''}💡 **সহায়ক প্রোডাক্ট (ঐচ্ছিক):**\n${prodLines}`

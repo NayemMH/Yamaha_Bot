@@ -12,7 +12,7 @@ export const SocialIntegrationView: React.FC<SocialIntegrationViewProps> = ({ la
   const [chatLog, setChatLog] = useState<Array<{ sender: 'user' | 'bot'; text: string; quickReplies?: string[] }>>([
     {
       sender: 'bot',
-      text: '*Yamaha BD Official WhatsApp Bot*\n\nHello! Welcome to Yamaha Motorbike Bangladesh (+8801787687254).\n\nHow can we help you today? You can type bike names for price lists or ask for nearby showrooms.',
+      text: '*Yamaha BD Official WhatsApp Bot*\n\nHello! Welcome to Yamaha Motorbike Bangladesh (+8801637026774).\n\nHow can we help you today? You can type bike names for price lists or ask for nearby showrooms.',
       quickReplies: ['🏍️ R15 V4 Price', '📍 Dhaka Showrooms', '📅 Book Service']
     }
   ]);
@@ -89,7 +89,7 @@ export const SocialIntegrationView: React.FC<SocialIntegrationViewProps> = ({ la
   const embedScriptCode = `<script>
   window.YamahaBdChatConfig = {
     appletId: "yamaha-bd-ai-v1",
-    whatsappPhone: "+8801787687254",
+    whatsappPhone: "+8801637026774",
     messengerPage: "yamaha.bd.official",
     language: "bn",
     themeColor: "#0020A1"
@@ -160,7 +160,7 @@ export const SocialIntegrationView: React.FC<SocialIntegrationViewProps> = ({ la
             }`}>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></div>
-                <span>{simPlatform === 'whatsapp' ? 'Yamaha BD WhatsApp (+8801787687254)' : 'Yamaha Motorbike Bangladesh Page'}</span>
+                <span>{simPlatform === 'whatsapp' ? 'Yamaha BD WhatsApp (+8801637026774)' : 'Yamaha Motorbike Bangladesh Page'}</span>
               </div>
               <span className="text-[10px] text-gray-400">Verified Bot</span>
             </div>
@@ -251,8 +251,8 @@ export const SocialIntegrationView: React.FC<SocialIntegrationViewProps> = ({ la
             {waStatus.autoSendEnabled ? (
               <p className="text-xs text-emerald-300">
                 ✅ {language === 'bn'
-                  ? `WhatsApp সংযুক্ত (নম্বর: +${waStatus.connectedNumber}) — সব লিড এখন সত্যিকারের অটো-সেন্ড হচ্ছে +8801787687254 নম্বরে।`
-                  : `WhatsApp connected (number: +${waStatus.connectedNumber}) — all leads now genuinely auto-send to +8801787687254.`}
+                  ? `WhatsApp সংযুক্ত (নম্বর: +${waStatus.connectedNumber}) — সব লিড এখন সত্যিকারের অটো-সেন্ড হচ্ছে +8801637026774 নম্বরে।`
+                  : `WhatsApp connected (number: +${waStatus.connectedNumber}) — all leads now genuinely auto-send to +8801637026774.`}
               </p>
             ) : waStatus.qrDataUrl ? (
               <div className="text-center space-y-2">
@@ -285,7 +285,7 @@ export const SocialIntegrationView: React.FC<SocialIntegrationViewProps> = ({ la
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-emerald-400">Official WhatsApp Direct Link</span>
                 <button
-                  onClick={() => copyToClipboard('https://wa.me/8801787687254?text=Hello%20Yamaha%20BD', 'wa')}
+                  onClick={() => copyToClipboard('https://wa.me/8801637026774?text=Hello%20Yamaha%20BD', 'wa')}
                   className="text-gray-400 hover:text-white flex items-center gap-1 text-[11px]"
                 >
                   {copiedLink === 'wa' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -293,10 +293,10 @@ export const SocialIntegrationView: React.FC<SocialIntegrationViewProps> = ({ la
                 </button>
               </div>
               <code className="text-[11px] text-gray-400 break-all block font-mono bg-[#0a0a0a] p-2 rounded border border-gray-800/60">
-                https://wa.me/8801787687254?text=Hello%20Yamaha%20BD
+                https://wa.me/8801637026774?text=Hello%20Yamaha%20BD
               </code>
               <a
-                href="https://wa.me/8801787687254?text=Hello%20Yamaha%20BD"
+                href="https://wa.me/8801637026774?text=Hello%20Yamaha%20BD"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-xs text-emerald-400 font-semibold hover:underline"
@@ -362,7 +362,7 @@ export const SocialIntegrationView: React.FC<SocialIntegrationViewProps> = ({ la
             </div>
 
             <p className="text-xs text-gray-400">
-              Real-time log of Email & WhatsApp dispatches to <strong className="text-white">Md. Mahadi Hassan (+8801787687254 / Mahadi.Nayem@aci-bd.com)</strong>, with honest delivery status per channel.
+              Real-time log of Email & WhatsApp dispatches to <strong className="text-white">Md. Mahadi Hassan (+8801637026774 / Mahadi.Nayem@aci-bd.com)</strong>, with honest delivery status per channel.
             </p>
 
             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">

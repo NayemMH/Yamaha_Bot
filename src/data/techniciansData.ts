@@ -9,7 +9,7 @@ import { getNearestServiceCenter } from './yamahaData';
 export const DEFAULT_CONTACT = {
   name: 'Md. Mahadi Hassan',
   email: 'Mahadi.Nayem@aci-bd.com',
-  phone: '+8801787687254'
+  phone: '+8801637026774'
 };
 
 export interface Technician {

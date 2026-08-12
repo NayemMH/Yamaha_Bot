@@ -8,3 +8,10 @@ coverage/
 !.env.example
 .wwebjs_auth/
 .wwebjs_cache/
+
+# Ignore claude and secrets
+.claude/
+CLAUDE.md
+*secret*
+secrets.json
+.env

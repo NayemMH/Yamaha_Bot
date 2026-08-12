@@ -1,0 +1,64 @@
+================================================================================
+YAMAHA MOTORBIKE BD AI ASSISTANT - PRODUCT IDEA & OVERVIEW
+================================================================================
+
+1. Name of your AI-Based Product Idea
+--------------------------------------------------------------------------------
+Yamaha Motorbike BD AI Assistant
+(Yamaha Bangladesh AI Chatbot & Service Assistant for ACI Motors)
+
+
+2. Briefly describe your idea and what business/function impact it will bring.
+--------------------------------------------------------------------------------
+
+PRODUCT DESCRIPTION:
+The Yamaha Motorbike BD AI Assistant is an end-to-end, omni-channel AI sales
+consultant and service diagnostic platform built specifically for Yamaha Bangladesh 
+(ACI Motors). Powered by Google Gemini (with built-in offline fallback pathways) 
+and integrated directly into Web and WhatsApp, it serves as an interactive 24/7 
+virtual assistant for prospective motorcycle buyers and existing riders.
+
+Key Functional Capabilities:
+- Smart Bike Recommender & Dynamic Upselling: Interactive quiz matching rider 
+  budget, riding purpose, and features (e.g., ABS, mileage) with AI-generated 
+  persuasive sales pitches and smart model upsells.
+- AI Audio Engine Sound Analyzer: Uses Gemini's multimodal audio processing to 
+  analyze recorded or uploaded engine sounds, diagnosing specific mechanical 
+  issues (e.g., timing chain friction, tappet noise, piston slap).
+- Service Diagnostic Knowledge Base: Matches rider-reported symptoms against a 
+  Knowledge Base (~30 issues) detailing root cause, urgency, and specific 
+  recommended products/lubricants (Yamalube, CEAT tires, Liqui Moly).
+- Localized Location Picker & Auto-Correction: Integrates all 64 Bangladesh 
+  districts & upazilas with fuzzy logic matching (e.g., auto-correcting "Sylet" 
+  to Sylhet) for accurate territory routing.
+- Automated Lead & Service Dispatch: Automated dual-channel dispatch via Gmail 
+  SMTP Email and WhatsApp (whatsapp-web.js) forwarding leads and service 
+  bookings directly to territory managers and technicians.
+
+
+BUSINESS & FUNCTIONAL IMPACT:
+
+1. Accelerated Sales Conversion & AOV Growth:
+   Dynamic budget upselling and tailored product recommendations guide customers 
+   toward higher-tier Yamaha models (e.g., R15, FZS) and official accessories/
+   lubricants, driving higher average order value (AOV).
+
+2. 24/7 Omni-Channel Customer Support:
+   Provides instant bilingual (Bengali & English) consultation on both web and 
+   WhatsApp without manual staff intervention, capturing leads around the clock.
+
+3. Faster Service Triage & Reduced Diagnostic Time:
+   The audio sound analyzer and diagnostic KB pre-identify bike issues before 
+   the customer arrives at a service center, allowing technicians to prepare 
+   parts in advance and speed up turn-around times.
+
+4. Zero-Friction Territory Lead Routing:
+   Automated Bangladesh district/upazila typo correction ensures leads and 
+   appointment requests are routed to the exact regional dealer or technician 
+   without manual sorting.
+
+5. Automated Lead Logistics & Higher Retention:
+   Real-time dual dispatch (Email + direct WhatsApp message) eliminates lost 
+   leads, boosts appointment show-up rates, and deepens post-purchase customer 
+   loyalty.
+================================================================================

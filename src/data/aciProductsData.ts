@@ -788,6 +788,8 @@ export const SERVICE_DIAGNOSTICS_KB: DiagnosticIssue[] = [
   }
 ];
 
+import { levenshtein } from './locationData';
+
 /** Match free text against the diagnostics KB (used by chat fallback + service assistant). */
 // Generic bike-domain words that appear across most/all KB entries — excluding them
 // prevents them from drowning out the actually distinguishing symptom words (e.g. a
@@ -796,11 +798,40 @@ export const SERVICE_DIAGNOSTICS_KB: DiagnosticIssue[] = [
 const DIAGNOSTIC_STOPWORDS = new Set([
   'bike', 'motorcycle', 'motorbike', 'engine', 'motor', 'road', 'roads', 'wet', 'water',
   'high', 'low', 'after', 'before', 'during', 'when', 'while', 'with', 'from', 'your',
-  'have', 'has', 'the', 'and'
+  'have', 'has', 'the', 'and', 'service', 'servicing', 'want', 'need', 'please', 'korte'
 ]);
 
 // Crude suffix stripping so "skids"/"skidding" both resolve to a comparable "skid" root.
 const stem = (w: string) => w.replace(/(ing|edly|ed|es|s)$/, '');
+
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Whole-word substring check — NOT a naive .includes(). A naive substring check lets a short
+// common word accidentally match inside an unrelated longer word: "chai" (Bengali for "want",
+// extremely common in Banglish phrasing like "...korte chai") is a literal substring of the
+// English word "chain", which was silently scoring every "...chai" message as a Chain-Noise
+// title match. Bounding both sides on non-alphanumeric characters (so it also works correctly
+// against the Bengali-script text mixed into the same haystack) closes that off.
+const hasWord = (hay: string, word: string): boolean =>
+  new RegExp(`(^|[^a-z0-9])${escapeRegex(word)}([^a-z0-9]|$)`, 'i').test(hay);
+
+// Typo tolerance for title-level matches only (e.g. "millage" -> "mileage"). Restricted to
+// words of 5+ characters, matched against title words of 4+ characters, so short/common
+// words never fuzzy-match — that would reopen the false-positive risk this threshold guards
+// against (see matchDiagnostics's minScore param).
+const fuzzyTitleMatch = (word: string, titleHay: string): boolean => {
+  if (word.length < 5) return false;
+  const maxDist = word.length >= 8 ? 2 : 1;
+  return titleHay.split(/\s+/).some(tw => tw.length >= 4 && levenshtein(word, tw) <= maxDist);
+};
+
+// Explicit aliases for words that are themselves valid English words with an unrelated
+// everyday meaning (so generic edit-distance fuzzy matching deliberately won't bridge them,
+// to avoid accidental collisions) but are extremely common Banglish/typo substitutions for a
+// specific domain term — e.g. Bangladeshi riders very commonly type "break" for "brake".
+const DIAGNOSTIC_WORD_ALIASES: Record<string, string> = {
+  break: 'brake'
+};
 
 export const matchDiagnostics = (text: string, limit = 3, minScore = 1): DiagnosticIssue[] => {
   const q = text.toLowerCase();
@@ -815,9 +846,19 @@ export const matchDiagnostics = (text: string, limit = 3, minScore = 1): Diagnos
 
     for (const word of queryWords) {
       const root = stem(word);
-      if (titleHay.includes(word) || (root.length >= 3 && titleHay.includes(root))) {
+      const aliased = DIAGNOSTIC_WORD_ALIASES[word] || DIAGNOSTIC_WORD_ALIASES[root];
+      if (
+        hasWord(titleHay, word) ||
+        (root.length >= 3 && hasWord(titleHay, root)) ||
+        fuzzyTitleMatch(word, titleHay) ||
+        (aliased && hasWord(titleHay, aliased))
+      ) {
         score += 4; // title match = strongest signal, this word names the actual problem
-      } else if (symptomHay.includes(word) || (root.length >= 3 && symptomHay.includes(root))) {
+      } else if (
+        hasWord(symptomHay, word) ||
+        (root.length >= 3 && hasWord(symptomHay, root)) ||
+        (aliased && hasWord(symptomHay, aliased))
+      ) {
         score += 1; // symptom/cause text match = weaker supporting signal
       }
     }
